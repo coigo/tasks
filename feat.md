@@ -2,16 +2,17 @@
 Create a task management tool with focus on taks visualization and reports
 - Problem: at the moment my team is dealing with a task manager and we dont know with shure with must be made, the tasks that has been left aside and what eachother is doing. plus, we must show to our boss what we've made during some period
 
-you must develop a mvp software, only with basic functions to menage this tasks and easy undertanding interface
+you must develop a mvp software, only with basic functions to menage tasks and easy undertanding interface
 
 # Infra
 
 ## Frondend 
 
-Use react + vite as frontend. Split it into the layer:
+Use react + vite + tailwind as frontend. Split it into the layer:
 - services (api calls)
 - hooks
 - pages
+reuse components such as buttons, inputs, etc
 
 ## Interface
 This is an admin project, include some sort of metrics that show situation and type of tasks in the homepage
@@ -29,13 +30,13 @@ The services must rely solely on interfaces
 
 # Domain and Business
 
-consider the following:
+consider the following :
 - Users
 - Projects
 - Tasks
 - Tasks Movimentations
 - Tasks Files
-- Tasks situations
+- Tasks Situations
 - Tasks Types
 
 As a user i want to: 
@@ -51,7 +52,7 @@ As a user i want to:
 
 ## Authentication
   use Jwt access and refresh (2min) tokens (30d)
-  the password must be hashed as bcrypt with cost 8  
+  the password must be hashed as bcrypt with cost 10
 
 ## Files
 The files must be stored in a instance of minios3
@@ -69,3 +70,4 @@ To see the files, the server will request a signed url to minios3
 variables, functions, sctructs, database tables and columns and so on must be written with brazilian portuguese names
 All services that implement some kind of infrastructure logic like repositories or file storages must have an interface
 This is a mvp, only basic functions must be implemented
+Dont commit 

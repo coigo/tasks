@@ -8,21 +8,1265 @@ package repository
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const getProjeto = `-- name: GetProjeto :one
-SELECT id, nome, criado_em, deletado_em, created_at, updated_at FROM projetos
-WHERE id = $1 limit 1
+const countTarefasBySituacao = `-- name: CountTarefasBySituacao :many
+SELECT s.id, s.descricao, s.encerra_tarefa, COUNT(t.id) AS total
+FROM tarefas_situacoes s
+LEFT JOIN tarefas t ON t.situacao_id = s.id
+GROUP BY s.id, s.descricao, s.encerra_tarefa
+ORDER BY s.descricao
 `
 
-func (q *Queries) GetProjeto(ctx context.Context, id int32) (Projeto, error) {
-	row := q.db.QueryRow(ctx, getProjeto, id)
+type CountTarefasBySituacaoRow struct {
+	ID            int32
+	Descricao     string
+	EncerraTarefa pgtype.Bool
+	Total         int64
+}
+
+func (q *Queries) CountTarefasBySituacao(ctx context.Context) ([]CountTarefasBySituacaoRow, error) {
+	rows, err := q.db.Query(ctx, countTarefasBySituacao)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountTarefasBySituacaoRow
+	for rows.Next() {
+		var i CountTarefasBySituacaoRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Descricao,
+			&i.EncerraTarefa,
+			&i.Total,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const countTarefasByTipo = `-- name: CountTarefasByTipo :many
+SELECT tp.id, tp.descricao, COUNT(t.id) AS total
+FROM tarefas_tipo tp
+LEFT JOIN tarefas t ON t.tipo_id = tp.id
+GROUP BY tp.id, tp.descricao
+ORDER BY tp.descricao
+`
+
+type CountTarefasByTipoRow struct {
+	ID        int32
+	Descricao string
+	Total     int64
+}
+
+func (q *Queries) CountTarefasByTipo(ctx context.Context) ([]CountTarefasByTipoRow, error) {
+	rows, err := q.db.Query(ctx, countTarefasByTipo)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountTarefasByTipoRow
+	for rows.Next() {
+		var i CountTarefasByTipoRow
+		if err := rows.Scan(&i.ID, &i.Descricao, &i.Total); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const countTarefasResponsavel = `-- name: CountTarefasResponsavel :many
+SELECT u.id, u.nome, COUNT(t.id) AS total
+FROM usuarios u
+LEFT JOIN tarefas t ON t.responsavel_id = u.id
+GROUP BY u.id, u.nome
+ORDER BY u.nome
+`
+
+type CountTarefasResponsavelRow struct {
+	ID    int32
+	Nome  string
+	Total int64
+}
+
+func (q *Queries) CountTarefasResponsavel(ctx context.Context) ([]CountTarefasResponsavelRow, error) {
+	rows, err := q.db.Query(ctx, countTarefasResponsavel)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountTarefasResponsavelRow
+	for rows.Next() {
+		var i CountTarefasResponsavelRow
+		if err := rows.Scan(&i.ID, &i.Nome, &i.Total); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const createProjeto = `-- name: CreateProjeto :one
+INSERT INTO projetos (nome)
+VALUES ($1)
+RETURNING id, nome, criado_em, deletado_em, created_at, updated_at
+`
+
+func (q *Queries) CreateProjeto(ctx context.Context, nome string) (Projeto, error) {
+	row := q.db.QueryRow(ctx, createProjeto, nome)
 	var i Projeto
 	err := row.Scan(
 		&i.ID,
 		&i.Nome,
 		&i.CriadoEm,
 		&i.DeletadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createTarefa = `-- name: CreateTarefa :one
+INSERT INTO tarefas (
+    numero, ano, titulo, descricao, projeto_id,
+    criado_por_id, responsavel_id, situacao_id, tipo_id
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, criado_em, ultima_mov_em, created_at, updated_at
+`
+
+type CreateTarefaParams struct {
+	Numero        int32
+	Ano           int32
+	Titulo        string
+	Descricao     pgtype.Text
+	ProjetoID     int32
+	CriadoPorID   int32
+	ResponsavelID int32
+	SituacaoID    int32
+	TipoID        int32
+}
+
+func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Tarefa, error) {
+	row := q.db.QueryRow(ctx, createTarefa,
+		arg.Numero,
+		arg.Ano,
+		arg.Titulo,
+		arg.Descricao,
+		arg.ProjetoID,
+		arg.CriadoPorID,
+		arg.ResponsavelID,
+		arg.SituacaoID,
+		arg.TipoID,
+	)
+	var i Tarefa
+	err := row.Scan(
+		&i.ID,
+		&i.Numero,
+		&i.Ano,
+		&i.Titulo,
+		&i.Descricao,
+		&i.ProjetoID,
+		&i.CriadoPorID,
+		&i.ResponsavelID,
+		&i.SituacaoID,
+		&i.TipoID,
+		&i.CriadoEm,
+		&i.UltimaMovEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createTarefaAnexo = `-- name: CreateTarefaAnexo :one
+INSERT INTO tarefas_anexos (tarefa_id, uuid, nome, local, tamanho)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, tarefa_id, uuid, nome, local, tamanho, criado_em, created_at, updated_at
+`
+
+type CreateTarefaAnexoParams struct {
+	TarefaID int32
+	Uuid     string
+	Nome     string
+	Local    string
+	Tamanho  pgtype.Int8
+}
+
+func (q *Queries) CreateTarefaAnexo(ctx context.Context, arg CreateTarefaAnexoParams) (TarefasAnexo, error) {
+	row := q.db.QueryRow(ctx, createTarefaAnexo,
+		arg.TarefaID,
+		arg.Uuid,
+		arg.Nome,
+		arg.Local,
+		arg.Tamanho,
+	)
+	var i TarefasAnexo
+	err := row.Scan(
+		&i.ID,
+		&i.TarefaID,
+		&i.Uuid,
+		&i.Nome,
+		&i.Local,
+		&i.Tamanho,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createTarefaMovimentacao = `-- name: CreateTarefaMovimentacao :one
+INSERT INTO tarefas_movimentacoes (tarefa_id, situacao_id, descricao, criado_por_id)
+VALUES ($1, $2, $3, $4)
+RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id, criado_em, created_at, updated_at
+`
+
+type CreateTarefaMovimentacaoParams struct {
+	TarefaID    int32
+	SituacaoID  int32
+	Descricao   pgtype.Text
+	CriadoPorID int32
+}
+
+func (q *Queries) CreateTarefaMovimentacao(ctx context.Context, arg CreateTarefaMovimentacaoParams) (TarefasMovimentaco, error) {
+	row := q.db.QueryRow(ctx, createTarefaMovimentacao,
+		arg.TarefaID,
+		arg.SituacaoID,
+		arg.Descricao,
+		arg.CriadoPorID,
+	)
+	var i TarefasMovimentaco
+	err := row.Scan(
+		&i.ID,
+		&i.TarefaID,
+		&i.SituacaoID,
+		&i.Descricao,
+		&i.CriadoPorID,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createTarefaSituacao = `-- name: CreateTarefaSituacao :one
+INSERT INTO tarefas_situacoes (descricao, encerra_tarefa)
+VALUES ($1, $2)
+RETURNING id, descricao, encerra_tarefa, criado_em, created_at, updated_at
+`
+
+type CreateTarefaSituacaoParams struct {
+	Descricao     string
+	EncerraTarefa pgtype.Bool
+}
+
+func (q *Queries) CreateTarefaSituacao(ctx context.Context, arg CreateTarefaSituacaoParams) (TarefasSituaco, error) {
+	row := q.db.QueryRow(ctx, createTarefaSituacao, arg.Descricao, arg.EncerraTarefa)
+	var i TarefasSituaco
+	err := row.Scan(
+		&i.ID,
+		&i.Descricao,
+		&i.EncerraTarefa,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createTarefaTipo = `-- name: CreateTarefaTipo :one
+INSERT INTO tarefas_tipo (descricao)
+VALUES ($1)
+RETURNING id, descricao, criado_em, created_at, updated_at
+`
+
+func (q *Queries) CreateTarefaTipo(ctx context.Context, descricao string) (TarefasTipo, error) {
+	row := q.db.QueryRow(ctx, createTarefaTipo, descricao)
+	var i TarefasTipo
+	err := row.Scan(
+		&i.ID,
+		&i.Descricao,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createUsuario = `-- name: CreateUsuario :one
+INSERT INTO usuarios (nome, email, senha)
+VALUES ($1, $2, $3)
+RETURNING id, nome, email, created_at, updated_at
+`
+
+type CreateUsuarioParams struct {
+	Nome  string
+	Email string
+	Senha string
+}
+
+type CreateUsuarioRow struct {
+	ID        int32
+	Nome      string
+	Email     string
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+func (q *Queries) CreateUsuario(ctx context.Context, arg CreateUsuarioParams) (CreateUsuarioRow, error) {
+	row := q.db.QueryRow(ctx, createUsuario, arg.Nome, arg.Email, arg.Senha)
+	var i CreateUsuarioRow
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const deleteProjeto = `-- name: DeleteProjeto :exec
+UPDATE projetos
+SET deletado_em = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+`
+
+func (q *Queries) DeleteProjeto(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteProjeto, id)
+	return err
+}
+
+const deleteTarefa = `-- name: DeleteTarefa :exec
+DELETE FROM tarefas WHERE id = $1
+`
+
+func (q *Queries) DeleteTarefa(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteTarefa, id)
+	return err
+}
+
+const deleteTarefaAnexo = `-- name: DeleteTarefaAnexo :exec
+DELETE FROM tarefas_anexos WHERE id = $1
+`
+
+func (q *Queries) DeleteTarefaAnexo(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteTarefaAnexo, id)
+	return err
+}
+
+const deleteTarefaMovimentacao = `-- name: DeleteTarefaMovimentacao :exec
+DELETE FROM tarefas_movimentacoes WHERE id = $1
+`
+
+func (q *Queries) DeleteTarefaMovimentacao(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteTarefaMovimentacao, id)
+	return err
+}
+
+const deleteTarefaSituacao = `-- name: DeleteTarefaSituacao :exec
+DELETE FROM tarefas_situacoes WHERE id = $1
+`
+
+func (q *Queries) DeleteTarefaSituacao(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteTarefaSituacao, id)
+	return err
+}
+
+const deleteTarefaTipo = `-- name: DeleteTarefaTipo :exec
+DELETE FROM tarefas_tipo WHERE id = $1
+`
+
+func (q *Queries) DeleteTarefaTipo(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteTarefaTipo, id)
+	return err
+}
+
+const deleteUsuario = `-- name: DeleteUsuario :exec
+DELETE FROM usuarios WHERE id = $1
+`
+
+func (q *Queries) DeleteUsuario(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteUsuario, id)
+	return err
+}
+
+const getMaxNumeroTarefaByAno = `-- name: GetMaxNumeroTarefaByAno :one
+SELECT COALESCE(MAX(numero), 0) FROM tarefas WHERE ano = $1
+`
+
+func (q *Queries) GetMaxNumeroTarefaByAno(ctx context.Context, ano int32) (interface{}, error) {
+	row := q.db.QueryRow(ctx, getMaxNumeroTarefaByAno, ano)
+	var coalesce interface{}
+	err := row.Scan(&coalesce)
+	return coalesce, err
+}
+
+const getProjetoById = `-- name: GetProjetoById :one
+SELECT id, nome, criado_em, deletado_em, created_at, updated_at FROM projetos
+WHERE id = $1 limit 1
+`
+
+func (q *Queries) GetProjetoById(ctx context.Context, id int32) (Projeto, error) {
+	row := q.db.QueryRow(ctx, getProjetoById, id)
+	var i Projeto
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.CriadoEm,
+		&i.DeletadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTarefaAnexoById = `-- name: GetTarefaAnexoById :one
+SELECT id, tarefa_id, uuid, nome, local, tamanho, criado_em, created_at, updated_at FROM tarefas_anexos
+WHERE id = $1 limit 1
+`
+
+func (q *Queries) GetTarefaAnexoById(ctx context.Context, id int32) (TarefasAnexo, error) {
+	row := q.db.QueryRow(ctx, getTarefaAnexoById, id)
+	var i TarefasAnexo
+	err := row.Scan(
+		&i.ID,
+		&i.TarefaID,
+		&i.Uuid,
+		&i.Nome,
+		&i.Local,
+		&i.Tamanho,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTarefaById = `-- name: GetTarefaById :one
+SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
+       t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
+       t.criado_em, t.ultima_mov_em, t.created_at, t.updated_at,
+       p.nome AS projeto_nome,
+       u_criado.nome AS criado_por_nome,
+       u_resp.nome AS responsavel_nome,
+       s.descricao AS situacao_descricao,
+       s.encerra_tarefa AS situacao_encerra_tarefa,
+       tp.descricao AS tipo_descricao
+FROM tarefas t
+JOIN projetos p ON p.id = t.projeto_id
+JOIN usuarios u_criado ON u_criado.id = t.criado_por_id
+JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
+JOIN tarefas_situacoes s ON s.id = t.situacao_id
+JOIN tarefas_tipo tp ON tp.id = t.tipo_id
+WHERE t.id = $1 limit 1
+`
+
+type GetTarefaByIdRow struct {
+	ID                    int32
+	Numero                int32
+	Ano                   int32
+	Titulo                string
+	Descricao             pgtype.Text
+	ProjetoID             int32
+	CriadoPorID           int32
+	ResponsavelID         int32
+	SituacaoID            int32
+	TipoID                int32
+	CriadoEm              pgtype.Timestamp
+	UltimaMovEm           pgtype.Timestamp
+	CreatedAt             pgtype.Timestamp
+	UpdatedAt             pgtype.Timestamp
+	ProjetoNome           string
+	CriadoPorNome         string
+	ResponsavelNome       string
+	SituacaoDescricao     string
+	SituacaoEncerraTarefa pgtype.Bool
+	TipoDescricao         string
+}
+
+func (q *Queries) GetTarefaById(ctx context.Context, id int32) (GetTarefaByIdRow, error) {
+	row := q.db.QueryRow(ctx, getTarefaById, id)
+	var i GetTarefaByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Numero,
+		&i.Ano,
+		&i.Titulo,
+		&i.Descricao,
+		&i.ProjetoID,
+		&i.CriadoPorID,
+		&i.ResponsavelID,
+		&i.SituacaoID,
+		&i.TipoID,
+		&i.CriadoEm,
+		&i.UltimaMovEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ProjetoNome,
+		&i.CriadoPorNome,
+		&i.ResponsavelNome,
+		&i.SituacaoDescricao,
+		&i.SituacaoEncerraTarefa,
+		&i.TipoDescricao,
+	)
+	return i, err
+}
+
+const getTarefaMovimentacaoById = `-- name: GetTarefaMovimentacaoById :one
+SELECT id, tarefa_id, situacao_id, descricao, criado_por_id, criado_em, created_at, updated_at FROM tarefas_movimentacoes
+WHERE id = $1 limit 1
+`
+
+func (q *Queries) GetTarefaMovimentacaoById(ctx context.Context, id int32) (TarefasMovimentaco, error) {
+	row := q.db.QueryRow(ctx, getTarefaMovimentacaoById, id)
+	var i TarefasMovimentaco
+	err := row.Scan(
+		&i.ID,
+		&i.TarefaID,
+		&i.SituacaoID,
+		&i.Descricao,
+		&i.CriadoPorID,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTarefaSituacaoById = `-- name: GetTarefaSituacaoById :one
+SELECT id, descricao, encerra_tarefa, criado_em, created_at, updated_at FROM tarefas_situacoes
+WHERE id = $1 limit 1
+`
+
+func (q *Queries) GetTarefaSituacaoById(ctx context.Context, id int32) (TarefasSituaco, error) {
+	row := q.db.QueryRow(ctx, getTarefaSituacaoById, id)
+	var i TarefasSituaco
+	err := row.Scan(
+		&i.ID,
+		&i.Descricao,
+		&i.EncerraTarefa,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTarefaTipoById = `-- name: GetTarefaTipoById :one
+SELECT id, descricao, criado_em, created_at, updated_at FROM tarefas_tipo
+WHERE id = $1 limit 1
+`
+
+func (q *Queries) GetTarefaTipoById(ctx context.Context, id int32) (TarefasTipo, error) {
+	row := q.db.QueryRow(ctx, getTarefaTipoById, id)
+	var i TarefasTipo
+	err := row.Scan(
+		&i.ID,
+		&i.Descricao,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUsuarioByEmail = `-- name: GetUsuarioByEmail :one
+SELECT id, nome, email, senha, created_at, updated_at FROM usuarios
+WHERE email = $1 limit 1
+`
+
+func (q *Queries) GetUsuarioByEmail(ctx context.Context, email string) (Usuario, error) {
+	row := q.db.QueryRow(ctx, getUsuarioByEmail, email)
+	var i Usuario
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Email,
+		&i.Senha,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUsuarioById = `-- name: GetUsuarioById :one
+SELECT id, nome, email, senha, created_at, updated_at FROM usuarios
+WHERE id = $1 limit 1
+`
+
+func (q *Queries) GetUsuarioById(ctx context.Context, id int32) (Usuario, error) {
+	row := q.db.QueryRow(ctx, getUsuarioById, id)
+	var i Usuario
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Email,
+		&i.Senha,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const listProjetos = `-- name: ListProjetos :many
+SELECT id, nome, criado_em, deletado_em, created_at, updated_at FROM projetos
+WHERE deletado_em IS NULL
+ORDER BY nome
+`
+
+func (q *Queries) ListProjetos(ctx context.Context) ([]Projeto, error) {
+	rows, err := q.db.Query(ctx, listProjetos)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Projeto
+	for rows.Next() {
+		var i Projeto
+		if err := rows.Scan(
+			&i.ID,
+			&i.Nome,
+			&i.CriadoEm,
+			&i.DeletadoEm,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTarefaAnexosByTarefa = `-- name: ListTarefaAnexosByTarefa :many
+SELECT id, tarefa_id, uuid, nome, local, tamanho, criado_em, created_at, updated_at FROM tarefas_anexos
+WHERE tarefa_id = $1
+ORDER BY criado_em DESC
+`
+
+func (q *Queries) ListTarefaAnexosByTarefa(ctx context.Context, tarefaID int32) ([]TarefasAnexo, error) {
+	rows, err := q.db.Query(ctx, listTarefaAnexosByTarefa, tarefaID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TarefasAnexo
+	for rows.Next() {
+		var i TarefasAnexo
+		if err := rows.Scan(
+			&i.ID,
+			&i.TarefaID,
+			&i.Uuid,
+			&i.Nome,
+			&i.Local,
+			&i.Tamanho,
+			&i.CriadoEm,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTarefaMovimentacoesByTarefa = `-- name: ListTarefaMovimentacoesByTarefa :many
+SELECT m.id, m.tarefa_id, m.situacao_id, m.descricao, m.criado_por_id, m.criado_em, m.created_at, m.updated_at,
+       s.descricao AS situacao_descricao,
+       u.nome AS criado_por_nome
+FROM tarefas_movimentacoes m
+JOIN tarefas_situacoes s ON s.id = m.situacao_id
+JOIN usuarios u ON u.id = m.criado_por_id
+WHERE m.tarefa_id = $1
+ORDER BY m.criado_em DESC
+`
+
+type ListTarefaMovimentacoesByTarefaRow struct {
+	ID                int32
+	TarefaID          int32
+	SituacaoID        int32
+	Descricao         pgtype.Text
+	CriadoPorID       int32
+	CriadoEm          pgtype.Timestamp
+	CreatedAt         pgtype.Timestamp
+	UpdatedAt         pgtype.Timestamp
+	SituacaoDescricao string
+	CriadoPorNome     string
+}
+
+func (q *Queries) ListTarefaMovimentacoesByTarefa(ctx context.Context, tarefaID int32) ([]ListTarefaMovimentacoesByTarefaRow, error) {
+	rows, err := q.db.Query(ctx, listTarefaMovimentacoesByTarefa, tarefaID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTarefaMovimentacoesByTarefaRow
+	for rows.Next() {
+		var i ListTarefaMovimentacoesByTarefaRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TarefaID,
+			&i.SituacaoID,
+			&i.Descricao,
+			&i.CriadoPorID,
+			&i.CriadoEm,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.SituacaoDescricao,
+			&i.CriadoPorNome,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTarefaSituacoes = `-- name: ListTarefaSituacoes :many
+SELECT id, descricao, encerra_tarefa, criado_em, created_at, updated_at FROM tarefas_situacoes
+ORDER BY descricao
+`
+
+func (q *Queries) ListTarefaSituacoes(ctx context.Context) ([]TarefasSituaco, error) {
+	rows, err := q.db.Query(ctx, listTarefaSituacoes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TarefasSituaco
+	for rows.Next() {
+		var i TarefasSituaco
+		if err := rows.Scan(
+			&i.ID,
+			&i.Descricao,
+			&i.EncerraTarefa,
+			&i.CriadoEm,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTarefaTipos = `-- name: ListTarefaTipos :many
+SELECT id, descricao, criado_em, created_at, updated_at FROM tarefas_tipo
+ORDER BY descricao
+`
+
+func (q *Queries) ListTarefaTipos(ctx context.Context) ([]TarefasTipo, error) {
+	rows, err := q.db.Query(ctx, listTarefaTipos)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TarefasTipo
+	for rows.Next() {
+		var i TarefasTipo
+		if err := rows.Scan(
+			&i.ID,
+			&i.Descricao,
+			&i.CriadoEm,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTarefas = `-- name: ListTarefas :many
+SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
+       t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
+       t.criado_em, t.ultima_mov_em, t.created_at, t.updated_at,
+       p.nome AS projeto_nome,
+       u_criado.nome AS criado_por_nome,
+       u_resp.nome AS responsavel_nome,
+       s.descricao AS situacao_descricao,
+       s.encerra_tarefa AS situacao_encerra_tarefa,
+       tp.descricao AS tipo_descricao
+FROM tarefas t
+JOIN projetos p ON p.id = t.projeto_id
+JOIN usuarios u_criado ON u_criado.id = t.criado_por_id
+JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
+JOIN tarefas_situacoes s ON s.id = t.situacao_id
+JOIN tarefas_tipo tp ON tp.id = t.tipo_id
+WHERE ($1 = 0 OR t.responsavel_id = $1)
+  AND ($2 = 0 OR t.situacao_id = $2)
+  AND ($3 = 0 OR t.tipo_id = $3)
+  AND ($4 = 0 OR t.projeto_id = $4)
+  AND ($5 = '' OR t.titulo ILIKE '%' || $5 || '%' OR t.descricao ILIKE '%' || $5 || '%')
+  AND ($6 = TRUE OR s.encerra_tarefa = FALSE)
+ORDER BY t.ultima_mov_em DESC, t.id DESC
+`
+
+type ListTarefasParams struct {
+	ResponsavelID     interface{}
+	SituacaoID        interface{}
+	TipoID            interface{}
+	ProjetoID         interface{}
+	Busca             interface{}
+	IncluirEncerradas interface{}
+}
+
+type ListTarefasRow struct {
+	ID                    int32
+	Numero                int32
+	Ano                   int32
+	Titulo                string
+	Descricao             pgtype.Text
+	ProjetoID             int32
+	CriadoPorID           int32
+	ResponsavelID         int32
+	SituacaoID            int32
+	TipoID                int32
+	CriadoEm              pgtype.Timestamp
+	UltimaMovEm           pgtype.Timestamp
+	CreatedAt             pgtype.Timestamp
+	UpdatedAt             pgtype.Timestamp
+	ProjetoNome           string
+	CriadoPorNome         string
+	ResponsavelNome       string
+	SituacaoDescricao     string
+	SituacaoEncerraTarefa pgtype.Bool
+	TipoDescricao         string
+}
+
+func (q *Queries) ListTarefas(ctx context.Context, arg ListTarefasParams) ([]ListTarefasRow, error) {
+	rows, err := q.db.Query(ctx, listTarefas,
+		arg.ResponsavelID,
+		arg.SituacaoID,
+		arg.TipoID,
+		arg.ProjetoID,
+		arg.Busca,
+		arg.IncluirEncerradas,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTarefasRow
+	for rows.Next() {
+		var i ListTarefasRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Numero,
+			&i.Ano,
+			&i.Titulo,
+			&i.Descricao,
+			&i.ProjetoID,
+			&i.CriadoPorID,
+			&i.ResponsavelID,
+			&i.SituacaoID,
+			&i.TipoID,
+			&i.CriadoEm,
+			&i.UltimaMovEm,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ProjetoNome,
+			&i.CriadoPorNome,
+			&i.ResponsavelNome,
+			&i.SituacaoDescricao,
+			&i.SituacaoEncerraTarefa,
+			&i.TipoDescricao,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTarefasMovimentadasNoPeriodo = `-- name: ListTarefasMovimentadasNoPeriodo :many
+SELECT DISTINCT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
+       t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
+       t.criado_em, t.ultima_mov_em, t.created_at, t.updated_at,
+       p.nome AS projeto_nome,
+       u_criado.nome AS criado_por_nome,
+       u_resp.nome AS responsavel_nome,
+       s.descricao AS situacao_descricao,
+       s.encerra_tarefa AS situacao_encerra_tarefa,
+       tp.descricao AS tipo_descricao
+FROM tarefas t
+JOIN projetos p ON p.id = t.projeto_id
+JOIN usuarios u_criado ON u_criado.id = t.criado_por_id
+JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
+JOIN tarefas_situacoes s ON s.id = t.situacao_id
+JOIN tarefas_tipo tp ON tp.id = t.tipo_id
+JOIN tarefas_movimentacoes m ON m.tarefa_id = t.id
+WHERE m.criado_em BETWEEN $1 AND $2
+  AND ($3 = 0 OR t.responsavel_id = $3)
+ORDER BY t.ultima_mov_em DESC
+`
+
+type ListTarefasMovimentadasNoPeriodoParams struct {
+	DataInicio    pgtype.Timestamp
+	DataFim       pgtype.Timestamp
+	ResponsavelID interface{}
+}
+
+type ListTarefasMovimentadasNoPeriodoRow struct {
+	ID                    int32
+	Numero                int32
+	Ano                   int32
+	Titulo                string
+	Descricao             pgtype.Text
+	ProjetoID             int32
+	CriadoPorID           int32
+	ResponsavelID         int32
+	SituacaoID            int32
+	TipoID                int32
+	CriadoEm              pgtype.Timestamp
+	UltimaMovEm           pgtype.Timestamp
+	CreatedAt             pgtype.Timestamp
+	UpdatedAt             pgtype.Timestamp
+	ProjetoNome           string
+	CriadoPorNome         string
+	ResponsavelNome       string
+	SituacaoDescricao     string
+	SituacaoEncerraTarefa pgtype.Bool
+	TipoDescricao         string
+}
+
+func (q *Queries) ListTarefasMovimentadasNoPeriodo(ctx context.Context, arg ListTarefasMovimentadasNoPeriodoParams) ([]ListTarefasMovimentadasNoPeriodoRow, error) {
+	rows, err := q.db.Query(ctx, listTarefasMovimentadasNoPeriodo, arg.DataInicio, arg.DataFim, arg.ResponsavelID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTarefasMovimentadasNoPeriodoRow
+	for rows.Next() {
+		var i ListTarefasMovimentadasNoPeriodoRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Numero,
+			&i.Ano,
+			&i.Titulo,
+			&i.Descricao,
+			&i.ProjetoID,
+			&i.CriadoPorID,
+			&i.ResponsavelID,
+			&i.SituacaoID,
+			&i.TipoID,
+			&i.CriadoEm,
+			&i.UltimaMovEm,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ProjetoNome,
+			&i.CriadoPorNome,
+			&i.ResponsavelNome,
+			&i.SituacaoDescricao,
+			&i.SituacaoEncerraTarefa,
+			&i.TipoDescricao,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUsuarios = `-- name: ListUsuarios :many
+SELECT id, nome, email, created_at, updated_at FROM usuarios
+ORDER BY nome
+`
+
+type ListUsuariosRow struct {
+	ID        int32
+	Nome      string
+	Email     string
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+func (q *Queries) ListUsuarios(ctx context.Context) ([]ListUsuariosRow, error) {
+	rows, err := q.db.Query(ctx, listUsuarios)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUsuariosRow
+	for rows.Next() {
+		var i ListUsuariosRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Nome,
+			&i.Email,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateProjeto = `-- name: UpdateProjeto :one
+UPDATE projetos
+SET nome = $2,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING id, nome, criado_em, deletado_em, created_at, updated_at
+`
+
+type UpdateProjetoParams struct {
+	ID   int32
+	Nome string
+}
+
+func (q *Queries) UpdateProjeto(ctx context.Context, arg UpdateProjetoParams) (Projeto, error) {
+	row := q.db.QueryRow(ctx, updateProjeto, arg.ID, arg.Nome)
+	var i Projeto
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.CriadoEm,
+		&i.DeletadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateSituacaoTarefa = `-- name: UpdateSituacaoTarefa :exec
+UPDATE tarefas
+SET situacao_id = $2,
+    ultima_mov_em = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+`
+
+type UpdateSituacaoTarefaParams struct {
+	ID         int32
+	SituacaoID int32
+}
+
+func (q *Queries) UpdateSituacaoTarefa(ctx context.Context, arg UpdateSituacaoTarefaParams) error {
+	_, err := q.db.Exec(ctx, updateSituacaoTarefa, arg.ID, arg.SituacaoID)
+	return err
+}
+
+const updateTarefa = `-- name: UpdateTarefa :one
+UPDATE tarefas
+SET titulo = $2,
+    descricao = $3,
+    projeto_id = $4,
+    responsavel_id = $5,
+    situacao_id = $6,
+    tipo_id = $7,
+    ultima_mov_em = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, criado_em, ultima_mov_em, created_at, updated_at
+`
+
+type UpdateTarefaParams struct {
+	ID            int32
+	Titulo        string
+	Descricao     pgtype.Text
+	ProjetoID     int32
+	ResponsavelID int32
+	SituacaoID    int32
+	TipoID        int32
+}
+
+func (q *Queries) UpdateTarefa(ctx context.Context, arg UpdateTarefaParams) (Tarefa, error) {
+	row := q.db.QueryRow(ctx, updateTarefa,
+		arg.ID,
+		arg.Titulo,
+		arg.Descricao,
+		arg.ProjetoID,
+		arg.ResponsavelID,
+		arg.SituacaoID,
+		arg.TipoID,
+	)
+	var i Tarefa
+	err := row.Scan(
+		&i.ID,
+		&i.Numero,
+		&i.Ano,
+		&i.Titulo,
+		&i.Descricao,
+		&i.ProjetoID,
+		&i.CriadoPorID,
+		&i.ResponsavelID,
+		&i.SituacaoID,
+		&i.TipoID,
+		&i.CriadoEm,
+		&i.UltimaMovEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateTarefaMovimentacao = `-- name: UpdateTarefaMovimentacao :one
+UPDATE tarefas_movimentacoes
+SET descricao = $2,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id, criado_em, created_at, updated_at
+`
+
+type UpdateTarefaMovimentacaoParams struct {
+	ID        int32
+	Descricao pgtype.Text
+}
+
+func (q *Queries) UpdateTarefaMovimentacao(ctx context.Context, arg UpdateTarefaMovimentacaoParams) (TarefasMovimentaco, error) {
+	row := q.db.QueryRow(ctx, updateTarefaMovimentacao, arg.ID, arg.Descricao)
+	var i TarefasMovimentaco
+	err := row.Scan(
+		&i.ID,
+		&i.TarefaID,
+		&i.SituacaoID,
+		&i.Descricao,
+		&i.CriadoPorID,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateTarefaSituacao = `-- name: UpdateTarefaSituacao :one
+UPDATE tarefas_situacoes
+SET descricao = $2,
+    encerra_tarefa = $3,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING id, descricao, encerra_tarefa, criado_em, created_at, updated_at
+`
+
+type UpdateTarefaSituacaoParams struct {
+	ID            int32
+	Descricao     string
+	EncerraTarefa pgtype.Bool
+}
+
+func (q *Queries) UpdateTarefaSituacao(ctx context.Context, arg UpdateTarefaSituacaoParams) (TarefasSituaco, error) {
+	row := q.db.QueryRow(ctx, updateTarefaSituacao, arg.ID, arg.Descricao, arg.EncerraTarefa)
+	var i TarefasSituaco
+	err := row.Scan(
+		&i.ID,
+		&i.Descricao,
+		&i.EncerraTarefa,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateTarefaTipo = `-- name: UpdateTarefaTipo :one
+UPDATE tarefas_tipo
+SET descricao = $2,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING id, descricao, criado_em, created_at, updated_at
+`
+
+type UpdateTarefaTipoParams struct {
+	ID        int32
+	Descricao string
+}
+
+func (q *Queries) UpdateTarefaTipo(ctx context.Context, arg UpdateTarefaTipoParams) (TarefasTipo, error) {
+	row := q.db.QueryRow(ctx, updateTarefaTipo, arg.ID, arg.Descricao)
+	var i TarefasTipo
+	err := row.Scan(
+		&i.ID,
+		&i.Descricao,
+		&i.CriadoEm,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateUsuario = `-- name: UpdateUsuario :one
+UPDATE usuarios
+SET nome = $1,
+    email = $2,
+    senha = COALESCE(NULLIF($3, ''), senha),
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $4
+RETURNING id, nome, email, created_at, updated_at
+`
+
+type UpdateUsuarioParams struct {
+	Nome  string
+	Email string
+	Senha interface{}
+	ID    int32
+}
+
+type UpdateUsuarioRow struct {
+	ID        int32
+	Nome      string
+	Email     string
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+func (q *Queries) UpdateUsuario(ctx context.Context, arg UpdateUsuarioParams) (UpdateUsuarioRow, error) {
+	row := q.db.QueryRow(ctx, updateUsuario,
+		arg.Nome,
+		arg.Email,
+		arg.Senha,
+		arg.ID,
+	)
+	var i UpdateUsuarioRow
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Email,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

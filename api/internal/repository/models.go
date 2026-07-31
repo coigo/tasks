@@ -21,7 +21,9 @@ type Tarefa struct {
 	ID            int32
 	Numero        int32
 	Ano           int32
+	Titulo        string
 	Descricao     pgtype.Text
+	ProjetoID     int32
 	CriadoPorID   int32
 	ResponsavelID int32
 	SituacaoID    int32
@@ -35,20 +37,33 @@ type Tarefa struct {
 type TarefasAnexo struct {
 	ID        int32
 	TarefaID  int32
+	Uuid      string
 	Nome      string
-	Local     pgtype.Text
-	Descricao pgtype.Text
+	Local     string
+	Tamanho   pgtype.Int8
 	CriadoEm  pgtype.Timestamp
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
 }
 
+type TarefasMovimentaco struct {
+	ID          int32
+	TarefaID    int32
+	SituacaoID  int32
+	Descricao   pgtype.Text
+	CriadoPorID int32
+	CriadoEm    pgtype.Timestamp
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
 type TarefasSituaco struct {
-	ID        int32
-	Descricao string
-	CriadoEm  pgtype.Timestamp
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ID            int32
+	Descricao     string
+	EncerraTarefa pgtype.Bool
+	CriadoEm      pgtype.Timestamp
+	CreatedAt     pgtype.Timestamp
+	UpdatedAt     pgtype.Timestamp
 }
 
 type TarefasTipo struct {
@@ -62,6 +77,7 @@ type TarefasTipo struct {
 type Usuario struct {
 	ID        int32
 	Nome      string
+	Email     string
 	Senha     string
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
