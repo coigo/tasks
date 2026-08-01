@@ -53,6 +53,8 @@ func Load() Config {
 		AppPort: os.Getenv("APP_PORT"),
 	}
 
+	fmt.Println("cfg", cfg)
+
 	if cfg.AppPort == "" {
 		cfg.AppPort = "8080"
 	}

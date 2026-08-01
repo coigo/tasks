@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -76,10 +74,6 @@ func NewMinioStorage(ctx context.Context, cfg MinioStorageConfig) (*MinioStorage
 		return nil, err
 	}
 
-	if err := os.MkdirAll(cfg.TempDir, os.ModePerm); err != nil {
-		return nil, fmt.Errorf("erro ao criar diretorio temp: %w", err)
-	}
-
 	return storage, nil
 }
 
@@ -102,41 +96,38 @@ func (s *MinioStorage) ensureBucket(ctx context.Context) error {
 
 func (s *MinioStorage) UploadTemp(ctx context.Context, nome string, conteudo io.Reader) (string, error) {
 	arquivoUUID := uuid.New().String()
-	tempPath := filepath.Join(s.tempDir, arquivoUUID)
-
-	file, err := os.Create(tempPath)
+	destino := fmt.Sprintf("temp/%s", arquivoUUID)
+	
+	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(destino),
+		Body:   conteudo,
+	})
 	if err != nil {
-		return "", fmt.Errorf("erro ao criar arquivo temporario: %w", err)
-	}
-	defer file.Close()
-
-	if _, err := io.Copy(file, conteudo); err != nil {
-		return "", fmt.Errorf("erro ao escrever arquivo temporario: %w", err)
+		return "", fmt.Errorf("erro ao fazer upload: %w", err)
 	}
 
 	return arquivoUUID, nil
 }
 
 func (s *MinioStorage) MoverTempParaTarefa(ctx context.Context, arquivoUUID string, tarefaID int32) (string, error) {
-	tempPath := filepath.Join(s.tempDir, arquivoUUID)
-	file, err := os.Open(tempPath)
-	if err != nil {
-		return "", fmt.Errorf("arquivo temporario nao encontrado: %w", err)
-	}
-	defer file.Close()
+	tempPath := fmt.Sprintf("temp/%s", arquivoUUID)
 
 	destino := fmt.Sprintf("tarefas/%d/%s", tarefaID, arquivoUUID)
 
-	_, err = s.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(destino),
-		Body:   file,
+	_, err := s.client.CopyObject(ctx, &s3.CopyObjectInput{
+		Bucket: 	aws.String(s.bucket),
+		CopySource: aws.String(tempPath),
+		Key: 		aws.String(destino),
 	})
+	if err != nil {
+		return "", fmt.Errorf("erro ao copiar arquivo: %w", err)
+	}
+
 	if err != nil {
 		return "", fmt.Errorf("erro ao enviar arquivo para s3: %w", err)
 	}
 
-	os.Remove(tempPath)
 	return destino, nil
 }
 
