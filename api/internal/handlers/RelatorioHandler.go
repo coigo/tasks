@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"tasks/internal/middleware"
 	"tasks/internal/services"
+	"tasks/internal/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -37,6 +38,7 @@ func NewRelatorioHandler(cfg RelatorioHandlerConfig) *RelatorioHandler {
 
 func (h *RelatorioHandler) Metricas(ctx *gin.Context) {
 	metricas, err := h.tarefaService.Metricas(ctx.Request.Context())
+
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
@@ -67,5 +69,5 @@ func (h *RelatorioHandler) TarefasMovimentadasNoPeriodo(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, tarefas)
+	ctx.JSON(http.StatusOK, utils.EnsureList(tarefas))
 }

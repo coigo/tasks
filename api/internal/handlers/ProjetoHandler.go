@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"tasks/internal/middleware"
 	"tasks/internal/services"
+	"tasks/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -47,7 +48,7 @@ func (h *ProjetoHandler) Listar(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, projetos)
+	ctx.JSON(http.StatusOK, utils.EnsureList(projetos))
 }
 
 func (h *ProjetoHandler) BuscarPorId(ctx *gin.Context) {

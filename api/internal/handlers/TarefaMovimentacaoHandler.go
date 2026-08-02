@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"tasks/internal/middleware"
 	"tasks/internal/services"
+	"tasks/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -54,7 +55,7 @@ func (h *TarefaMovimentacaoHandler) Listar(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, movimentacoes)
+	ctx.JSON(http.StatusOK, utils.EnsureList(movimentacoes))
 }
 
 func (h *TarefaMovimentacaoHandler) BuscarPorId(ctx *gin.Context) {

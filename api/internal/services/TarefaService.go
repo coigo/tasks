@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"tasks/internal/repository"
 	"tasks/internal/repository/ports"
+	"tasks/internal/utils"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -118,9 +119,9 @@ func (s *TarefaService) Metricas(ctx context.Context) (map[string]interface{}, e
 	}
 
 	return map[string]interface{}{
-		"por_situacao":    porSituacao,
-		"por_tipo":        porTipo,
-		"por_responsavel": porResponsavel,
+		"por_situacao":    utils.EnsureList(porSituacao),
+		"por_tipo":        utils.EnsureList(porTipo),
+		"por_responsavel": utils.EnsureList(porResponsavel),
 	}, nil
 }
 
