@@ -9,76 +9,76 @@ import (
 )
 
 type Projeto struct {
-	ID         int32
-	Nome       string
-	CriadoEm   pgtype.Timestamp
-	DeletadoEm pgtype.Timestamp
-	CreatedAt  pgtype.Timestamp
-	UpdatedAt  pgtype.Timestamp
+	ID         int32  `json:"id"`
+	Nome       string `json:"nome"`
+	CriadoEm   pgtype.Timestamp `json:"criadoEm"`
+	DeletadoEm pgtype.Timestamp `json:"deletadoEm"`
+	CreatedAt  pgtype.Timestamp `json:"createdAt"`
+	UpdatedAt  pgtype.Timestamp `json:"updatedAt"`
 }
 
 type Tarefa struct {
-	ID            int32
-	Numero        int32
-	Ano           int32
-	Titulo        string
-	Descricao     pgtype.Text
-	ProjetoID     int32
-	CriadoPorID   int32
-	ResponsavelID int32
-	SituacaoID    int32
-	TipoID        int32
-	CriadoEm      pgtype.Timestamp
-	UltimaMovEm   pgtype.Timestamp
-	CreatedAt     pgtype.Timestamp
-	UpdatedAt     pgtype.Timestamp
+	ID            int32  `json:"id"`
+	Numero        int32  `json:"numero"`
+	Ano           int32  `json:"ano"`
+	Titulo        string `json:"titulo"`
+	Descricao     pgtype.Text `json:"descricao"`
+	ProjetoID     int32  `json:"projetoId"`
+	CriadoPorID   int32  `json:"criadoPorId"`
+	ResponsavelID int32  `json:"responsavelId"`
+	SituacaoID    int32  `json:"situacaoId"`
+	TipoID        int32  `json:"tipoId"`
+	CriadoEm      pgtype.Timestamp `json:"criadoEm"`
+	UltimaMovEm   pgtype.Timestamp `json:"ultimaMovEm"`
+	CreatedAt     pgtype.Timestamp `json:"createdAt"`
+	UpdatedAt     pgtype.Timestamp `json:"updatedAt"`
 }
 
 type TarefasAnexo struct {
-	ID        int32
-	TarefaID  int32
-	Uuid      string
-	Nome      string
-	Local     string
-	Tamanho   pgtype.Int8
-	CriadoEm  pgtype.Timestamp
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ID        int32  `json:"id"`
+	TarefaID  int32  `json:"tarefaId"`
+	Uuid      string `json:"uuid"`
+	Nome      string `json:"nome"`
+	Local     string `json:"local"`
+	Tamanho   pgtype.Int8 `json:"tamanho"`
+	CriadoEm  pgtype.Timestamp `json:"criadoEm"`
+	CreatedAt pgtype.Timestamp `json:"createdAt"`
+	UpdatedAt pgtype.Timestamp `json:"updatedAt"`
 }
 
 type TarefasMovimentaco struct {
-	ID          int32
-	TarefaID    int32
-	SituacaoID  int32
-	Descricao   pgtype.Text
-	CriadoPorID int32
-	CriadoEm    pgtype.Timestamp
-	CreatedAt   pgtype.Timestamp
-	UpdatedAt   pgtype.Timestamp
+	ID          int32  `json:"id"`
+	TarefaID    int32  `json:"tarefaId"`
+	SituacaoID  int32  `json:"situacaoId"`
+	Descricao   pgtype.Text `json:"descricao"`
+	CriadoPorID int32  `json:"criadoPorId"`
+	CriadoEm    pgtype.Timestamp `json:"criadoEm"`
+	CreatedAt   pgtype.Timestamp `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamp `json:"updatedAt"`
 }
 
 type TarefasSituaco struct {
-	ID            int32
-	Descricao     string
-	EncerraTarefa pgtype.Bool
-	CriadoEm      pgtype.Timestamp
-	CreatedAt     pgtype.Timestamp
-	UpdatedAt     pgtype.Timestamp
+	ID            int32  `json:"id"`
+	Descricao     string `json:"descricao"`
+	EncerraTarefa pgtype.Bool `json:"encerraTarefa"`
+	CriadoEm      pgtype.Timestamp `json:"criadoEm"`
+	CreatedAt     pgtype.Timestamp `json:"createdAt"`
+	UpdatedAt     pgtype.Timestamp `json:"updatedAt"`
 }
 
 type TarefasTipo struct {
-	ID        int32
-	Descricao string
-	CriadoEm  pgtype.Timestamp
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ID        int32  `json:"id"`
+	Descricao string `json:"descricao"`
+	CriadoEm  pgtype.Timestamp `json:"criadoEm"`
+	CreatedAt pgtype.Timestamp `json:"createdAt"`
+	UpdatedAt pgtype.Timestamp `json:"updatedAt"`
 }
 
 type Usuario struct {
-	ID        int32
-	Nome      string
-	Email     string
-	Senha     string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ID        int32  `json:"id"`
+	Nome      string `json:"nome"`
+	Email     string `json:"email"`
+	Senha     string `json:"senha"`
+	CreatedAt pgtype.Timestamp `json:"createdAt"`
+	UpdatedAt pgtype.Timestamp `json:"updatedAt"`
 }

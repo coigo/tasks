@@ -1014,8 +1014,8 @@ ORDER BY nome
 `
 
 type ListUsuariosRow struct {
-	ID        int32
-	Nome      string
+	ID        int32  `json:"id"`
+	Nome      string `json:"nome"`
 	Email     string
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
