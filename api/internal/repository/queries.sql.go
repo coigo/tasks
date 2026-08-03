@@ -478,26 +478,26 @@ WHERE t.id = $1 limit 1
 `
 
 type GetTarefaByIdRow struct {
-	ID                    int32
-	Numero                int32
-	Ano                   int32
-	Titulo                string
-	Descricao             pgtype.Text
-	ProjetoID             int32
-	CriadoPorID           int32
-	ResponsavelID         int32
-	SituacaoID            int32
-	TipoID                int32
-	CriadoEm              pgtype.Timestamp
-	UltimaMovEm           pgtype.Timestamp
-	CreatedAt             pgtype.Timestamp
-	UpdatedAt             pgtype.Timestamp
-	ProjetoNome           string
-	CriadoPorNome         string
-	ResponsavelNome       string
-	SituacaoDescricao     string
-	SituacaoEncerraTarefa pgtype.Bool
-	TipoDescricao         string
+	ID                    int32				`json:"id"`
+	Numero                int32				`json:"numero"`
+	Ano                   int32				`json:"ano"`
+	Titulo                string				`json:"titulo"`
+	Descricao             pgtype.Text		`json:"descricao"`
+	ProjetoID             int32				`json:"projetoId"`
+	CriadoPorID           int32				`json:"criadoPorId"`
+	ResponsavelID         int32				`json:"responsavelId"`
+	SituacaoID            int32				`json:"situacaoId"`
+	TipoID                int32				`json:"tipoId"`
+	CriadoEm              pgtype.Timestamp	`json:"criadoEm"`
+	UltimaMovEm           pgtype.Timestamp	`json:"ultimaMovEm"`
+	CreatedAt             pgtype.Timestamp	`json:"createdAt"`
+	UpdatedAt             pgtype.Timestamp	`json:"updatedAt"`
+	ProjetoNome           string				`json:"projetoNome"`
+	CriadoPorNome         string				`json:"criadoPorNome"`
+	ResponsavelNome       string				`json:"responsavelNome"`
+	SituacaoDescricao     string				`json:"situacaoDescricao"`
+	SituacaoEncerraTarefa pgtype.Bool		`json:"situacaoEncerraTarefa"`
+	TipoDescricao         string				`json:"tipoDescricao"`
 }
 
 func (q *Queries) GetTarefaById(ctx context.Context, id int32) (GetTarefaByIdRow, error) {

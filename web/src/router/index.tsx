@@ -4,7 +4,8 @@ import { Layout } from '../components/Layout';
 import { Login } from '../pages/Login';
 import { Home } from '../pages/Home';
 import { Tarefas } from '../pages/Tarefas';
-import { TarefaForm } from '../pages/TarefaForm';
+import { TarefaCreate } from '../pages/TarefaCreate';
+import { TarefaDetail } from '../pages/TarefaDetail';
 import { Projetos } from '../pages/Projetos';
 import { TarefaSituacoes } from '../pages/TarefaSituacoes';
 import { TarefaTipos } from '../pages/TarefaTipos';
@@ -45,8 +46,8 @@ export function Router() {
         >
           <Route index element={<Home />} />
           <Route path="tarefas" element={<Tarefas />} />
-          <Route path="tarefas/nova" element={<TarefaForm />} />
-          <Route path="tarefas/:id" element={<TarefaForm />} />
+          <Route path="tarefas/nova" element={<TarefaCreate />} />
+          <Route path="tarefas/:id" element={<TarefaDetail />} />
           <Route path="projetos" element={<Projetos />} />
           <Route path="situacoes" element={<TarefaSituacoes />} />
           <Route path="tipos" element={<TarefaTipos />} />

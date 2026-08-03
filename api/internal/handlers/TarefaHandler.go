@@ -11,17 +11,22 @@ import (
 )
 
 type TarefaHandler struct {
-	service *services.TarefaService
+	service      *services.TarefaService
+	anexoService *services.TarefaAnexoService
 }
 
 type TarefaHandlerConfig struct {
-	Router  *gin.Engine
-	Service *services.TarefaService
-	Auth    *services.AuthService
+	Router       *gin.Engine
+	Service      *services.TarefaService
+	AnexoService *services.TarefaAnexoService
+	Auth         *services.AuthService
 }
 
 func NewTarefaHandler(cfg TarefaHandlerConfig) *TarefaHandler {
-	handler := &TarefaHandler{service: cfg.Service}
+	handler := &TarefaHandler{
+		service:      cfg.Service,
+		anexoService: cfg.AnexoService,
+	}
 	group := cfg.Router.Group("/tarefas")
 	group.Use(middleware.AuthMiddleware(cfg.Auth))
 
@@ -35,12 +40,13 @@ func NewTarefaHandler(cfg TarefaHandlerConfig) *TarefaHandler {
 }
 
 type CriarTarefaRequest struct {
-	Titulo        string `json:"titulo" binding:"required"`
-	Descricao     string `json:"descricao"`
-	ProjetoID     int32  `json:"projeto_id" binding:"required"`
-	ResponsavelID int32  `json:"responsavel_id" binding:"required"`
-	SituacaoID    int32  `json:"situacao_id" binding:"required"`
-	TipoID        int32  `json:"tipo_id" binding:"required"`
+	Titulo        string   `json:"titulo" binding:"required"`
+	Descricao     string   `json:"descricao"`
+	ProjetoID     int32    `json:"projeto_id" binding:"required"`
+	ResponsavelID int32    `json:"responsavel_id" binding:"required"`
+	SituacaoID    int32    `json:"situacao_id" binding:"required"`
+	TipoID        int32    `json:"tipo_id" binding:"required"`
+	Anexos        []string `json:"anexos"`
 }
 
 type AtualizarTarefaRequest struct {
@@ -96,6 +102,14 @@ func (h *TarefaHandler) Criar(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
+
+	if len(req.Anexos) > 0 && h.anexoService != nil {
+		if _, err := h.anexoService.ConfirmarAnexos(ctx.Request.Context(), tarefa.ID, req.Anexos); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
+	}
+
 	ctx.JSON(http.StatusCreated, tarefa)
 }
 

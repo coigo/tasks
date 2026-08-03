@@ -27,6 +27,29 @@ func (s *TarefaAnexoService) UploadTemp(ctx context.Context, nome string, conteu
 	return s.storage.UploadTemp(ctx, nome, conteudo)
 }
 
+func (s *TarefaAnexoService) ConfirmarAnexos(ctx context.Context, tarefaID int32, uuids []string) ([]repository.TarefasAnexo, error) {
+	var anexos []repository.TarefasAnexo
+	for _, uuid := range uuids {
+		local, err := s.storage.MoverTempParaTarefa(ctx, uuid, tarefaID)
+		if err != nil {
+			return nil, err
+		}
+
+		anexo, err := s.anexoRepository.CreateTarefaAnexo(ctx, repository.CreateTarefaAnexoParams{
+			TarefaID: tarefaID,
+			Uuid:     uuid,
+			Nome:     uuid,
+			Local:    local,
+			Tamanho:  pgtype.Int8{Int64: 0, Valid: false},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("erro ao salvar anexo no banco: %w", err)
+		}
+		anexos = append(anexos, anexo)
+	}
+	return anexos, nil
+}
+
 func (s *TarefaAnexoService) FinalizarAnexos(ctx context.Context, tarefaID int32, uuids []string, nomes []string) error {
 	for i, uuid := range uuids {
 		local, err := s.storage.MoverTempParaTarefa(ctx, uuid, tarefaID)

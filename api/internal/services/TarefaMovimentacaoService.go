@@ -21,10 +21,15 @@ func NewTarefaMovimentacaoService(movRepo ports.ITarefaMovimentacaoRepository, t
 	}
 }
 
-func (s *TarefaMovimentacaoService) Criar(ctx context.Context, tarefaID, situacaoID, criadoPorID int32, descricao string) (*repository.TarefasMovimentaco, error) {
+func (s *TarefaMovimentacaoService) Criar(ctx context.Context, tarefaID, criadoPorID int32, situacaoID *int32, descricao string) (*repository.TarefasMovimentaco, error) {
+	var situacaoIDValue int32
+	if situacaoID != nil {
+		situacaoIDValue = *situacaoID
+	}
+
 	movimentacao, err := s.movimentacaoRepository.CreateTarefaMovimentacao(ctx, repository.CreateTarefaMovimentacaoParams{
 		TarefaID:    tarefaID,
-		SituacaoID:  situacaoID,
+		SituacaoID:  situacaoIDValue,
 		Descricao:   pgtype.Text{String: descricao, Valid: descricao != ""},
 		CriadoPorID: criadoPorID,
 	})
@@ -32,11 +37,13 @@ func (s *TarefaMovimentacaoService) Criar(ctx context.Context, tarefaID, situaca
 		return nil, fmt.Errorf("erro ao criar movimentacao: %w", err)
 	}
 
-	if err := s.tarefaRepository.UpdateSituacaoTarefa(ctx, repository.UpdateSituacaoTarefaParams{
-		ID:         tarefaID,
-		SituacaoID: situacaoID,
-	}); err != nil {
-		return nil, fmt.Errorf("erro ao atualizar situacao da tarefa: %w", err)
+	if situacaoID != nil {
+		if err := s.tarefaRepository.UpdateSituacaoTarefa(ctx, repository.UpdateSituacaoTarefaParams{
+			ID:         tarefaID,
+			SituacaoID: situacaoIDValue,
+		}); err != nil {
+			return nil, fmt.Errorf("erro ao atualizar situacao da tarefa: %w", err)
+		}
 	}
 
 	return &movimentacao, nil

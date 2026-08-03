@@ -27,10 +27,15 @@ func NewTarefaAnexoHandler(cfg TarefaAnexoHandlerConfig) *TarefaAnexoHandler {
 
 	group.GET("", handler.Listar)
 	group.POST("/upload-temp", handler.UploadTemp)
+	group.POST("/confirmar", handler.ConfirmarAnexos)
 	group.GET("/:anexo_id/url", handler.GerarURL)
 	group.DELETE("/:anexo_id", handler.Remover)
 
 	return handler
+}
+
+type ConfirmarAnexosRequest struct {
+	Uuids []string `json:"uuids" binding:"required"`
 }
 
 func (h *TarefaAnexoHandler) Listar(ctx *gin.Context) {
@@ -66,6 +71,28 @@ func (h *TarefaAnexoHandler) UploadTemp(ctx *gin.Context) {
 		"uuid": uuid,
 		"nome": header.Filename,
 	})
+}
+
+func (h *TarefaAnexoHandler) ConfirmarAnexos(ctx *gin.Context) {
+	tarefaID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "tarefa id invalido"})
+		return
+	}
+
+	var req ConfirmarAnexosRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "uuids invalidos"})
+		return
+	}
+
+	anexos, err := h.service.ConfirmarAnexos(ctx.Request.Context(), int32(tarefaID), req.Uuids)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, anexos)
 }
 
 func (h *TarefaAnexoHandler) GerarURL(ctx *gin.Context) {

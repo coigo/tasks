@@ -30,7 +30,7 @@ interface Filtro {
 
 export function Tarefas() {
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [filtros, setFiltros] = useState<Filtro>({
     responsavel_id: '',
     situacao_id: '',
@@ -66,7 +66,7 @@ export function Tarefas() {
 
   useEffect(() => {
     const carregarTarefas = async () => {
-      setIsLoading(true);
+      setIsLoading(false);
       try {
         const params = new URLSearchParams();
         if (filtros.responsavel_id) params.append('responsavel_id', filtros.responsavel_id);

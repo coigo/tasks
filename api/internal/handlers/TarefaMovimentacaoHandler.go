@@ -35,7 +35,7 @@ func NewTarefaMovimentacaoHandler(cfg TarefaMovimentacaoHandlerConfig) *TarefaMo
 }
 
 type CriarTarefaMovimentacaoRequest struct {
-	SituacaoID int32  `json:"situacao_id" binding:"required"`
+	SituacaoID *int32 `json:"situacao_id"`
 	Descricao  string `json:"descricao"`
 }
 
@@ -87,7 +87,7 @@ func (h *TarefaMovimentacaoHandler) Criar(ctx *gin.Context) {
 	}
 
 	criadoPorID := middleware.GetUsuarioID(ctx)
-	movimentacao, err := h.service.Criar(ctx.Request.Context(), int32(tarefaID), req.SituacaoID, criadoPorID, req.Descricao)
+	movimentacao, err := h.service.Criar(ctx.Request.Context(), int32(tarefaID), criadoPorID, req.SituacaoID, req.Descricao)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return

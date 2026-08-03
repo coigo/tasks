@@ -37,11 +37,11 @@ Sistema de gestão de tarefas com foco em visualização e relatórios.
    DATABASE_URL=postgres://tasks:tasks@localhost:5433/tasks
 
    # MinIO
-   MINIO_ENDPOINT=localhost:9000
-   MINIO_ACCESS_KEY=tasks
-   MINIO_SECRET_KEY=taskstasks
-   MINIO_BUCKET=tasks
-   MINIO_USE_SSL=false
+   S3_ENDPOINT=localhost:9000
+   S3_ACCESS_KEY=tasks
+   S3_SECRET_KEY=taskstasks
+   S3_BUCKET=tasks
+   S3_USE_SSL=false
 
    # JWT
    JWT_SECRET=tasks-secret-key-change-in-production

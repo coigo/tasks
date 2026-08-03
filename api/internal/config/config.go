@@ -40,10 +40,10 @@ func Load() Config {
 		DBName:       os.Getenv("DB_NAME"),
 		DATABASE_URL: os.Getenv("DATABASE_URL"),
 
-		MinioEndpoint:  os.Getenv("MINIO_ENDPOINT"),
-		MinioAccessKey: os.Getenv("MINIO_ACCESS_KEY"),
-		MinioSecretKey: os.Getenv("MINIO_SECRET_KEY"),
-		MinioBucket:    os.Getenv("MINIO_BUCKET"),
+		MinioEndpoint:  os.Getenv("S3_ENDPOINT"),
+		MinioAccessKey: os.Getenv("S3_ACCESS_KEY"),
+		MinioSecretKey: os.Getenv("S3_SECRET_KEY"),
+		MinioBucket:    os.Getenv("S3_BUCKET"),
 
 		JWTSecret: os.Getenv("JWT_SECRET"),
 
