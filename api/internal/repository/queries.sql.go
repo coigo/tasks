@@ -20,10 +20,10 @@ ORDER BY s.descricao
 `
 
 type CountTarefasBySituacaoRow struct {
-	ID            int32
-	Descricao     string
-	EncerraTarefa pgtype.Bool
-	Total         int64
+	ID            int32			`json:"id"`
+	Descricao     string			`json:"descricao"`
+	EncerraTarefa pgtype.Bool	`json:"encerraTarefa"`
+	Total         int64			`json:"total"`
 }
 
 func (q *Queries) CountTarefasBySituacao(ctx context.Context) ([]CountTarefasBySituacaoRow, error) {
@@ -60,9 +60,9 @@ ORDER BY tp.descricao
 `
 
 type CountTarefasByTipoRow struct {
-	ID        int32
-	Descricao string
-	Total     int64
+	ID        int32	`json:"id"`
+	Descricao string	`json:"descricao"`
+	Total     int64	`json:"total"`
 }
 
 func (q *Queries) CountTarefasByTipo(ctx context.Context) ([]CountTarefasByTipoRow, error) {
@@ -94,9 +94,9 @@ ORDER BY u.nome
 `
 
 type CountTarefasResponsavelRow struct {
-	ID    int32
-	Nome  string
-	Total int64
+	ID    int32		`json:"id"`
+	Nome  string	`json:"nome"`
+	Total int64		`json:"total"`
 }
 
 func (q *Queries) CountTarefasResponsavel(ctx context.Context) ([]CountTarefasResponsavelRow, error) {
@@ -149,15 +149,15 @@ RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, respons
 `
 
 type CreateTarefaParams struct {
-	Numero        int32
-	Ano           int32
-	Titulo        string
-	Descricao     pgtype.Text
-	ProjetoID     int32
-	CriadoPorID   int32
-	ResponsavelID int32
-	SituacaoID    int32
-	TipoID        int32
+	Numero        int32			`json:"numero"`
+	Ano           int32			`json:"ano"`
+	Titulo        string			`json:"titulo"`
+	Descricao     pgtype.Text	`json:"descricao"`
+	ProjetoID     int32			`json:"projetoId"`
+	CriadoPorID   int32			`json:"criadoPorId"`
+	ResponsavelID int32			`json:"responsavelId"`
+	SituacaoID    int32			`json:"situacaoId"`
+	TipoID        int32			`json:"tipoId"`
 }
 
 func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Tarefa, error) {
@@ -199,11 +199,11 @@ RETURNING id, tarefa_id, uuid, nome, local, tamanho, criado_em, created_at, upda
 `
 
 type CreateTarefaAnexoParams struct {
-	TarefaID int32
-	Uuid     string
-	Nome     string
-	Local    string
-	Tamanho  pgtype.Int8
+	TarefaID int32			`json:"tarefaId"`
+	Uuid     string		`json:"uuid"`
+	Nome     string		`json:"nome"`
+	Local    string		`json:"local"`
+	Tamanho  pgtype.Int8	`json:"tamanho"`
 }
 
 func (q *Queries) CreateTarefaAnexo(ctx context.Context, arg CreateTarefaAnexoParams) (TarefasAnexo, error) {
@@ -705,16 +705,16 @@ ORDER BY m.criado_em DESC
 `
 
 type ListTarefaMovimentacoesByTarefaRow struct {
-	ID                int32
-	TarefaID          int32
-	SituacaoID        int32
-	Descricao         pgtype.Text
-	CriadoPorID       int32
-	CriadoEm          pgtype.Timestamp
-	CreatedAt         pgtype.Timestamp
-	UpdatedAt         pgtype.Timestamp
-	SituacaoDescricao string
-	CriadoPorNome     string
+	ID                int32             `json:"id"`
+	TarefaID          int32             `json:"tarefaId"`
+	SituacaoID        int32             `json:"situacaoId"`
+	Descricao         pgtype.Text       `json:"descricao"`
+	CriadoPorID       int32             `json:"criadoPorId"`
+	CriadoEm          pgtype.Timestamp  `json:"criadoEm"`
+	CreatedAt         pgtype.Timestamp  `json:"createdAt"`
+	UpdatedAt         pgtype.Timestamp  `json:"updatedAt"`
+	SituacaoDescricao string            `json:"situacaoDescricao"`
+	CriadoPorNome     string            `json:"criadoPorNome"`
 }
 
 func (q *Queries) ListTarefaMovimentacoesByTarefa(ctx context.Context, tarefaID int32) ([]ListTarefaMovimentacoesByTarefaRow, error) {
@@ -846,26 +846,26 @@ type ListTarefasParams struct {
 }
 
 type ListTarefasRow struct {
-	ID                    int32
-	Numero                int32
-	Ano                   int32
-	Titulo                string
-	Descricao             pgtype.Text
-	ProjetoID             int32
-	CriadoPorID           int32
-	ResponsavelID         int32
-	SituacaoID            int32
-	TipoID                int32
-	CriadoEm              pgtype.Timestamp
-	UltimaMovEm           pgtype.Timestamp
-	CreatedAt             pgtype.Timestamp
-	UpdatedAt             pgtype.Timestamp
-	ProjetoNome           string
-	CriadoPorNome         string
-	ResponsavelNome       string
-	SituacaoDescricao     string
-	SituacaoEncerraTarefa pgtype.Bool
-	TipoDescricao         string
+	ID                    int32				`json:"id"`
+	Numero                int32				`json:"numero"`
+	Ano                   int32				`json:"ano"`
+	Titulo                string				`json:"titulo"`
+	Descricao             pgtype.Text		`json:"descricao"`
+	ProjetoID             int32				`json:"projetoId"`
+	CriadoPorID           int32				`json:"criadoPorId"`
+	ResponsavelID         int32				`json:"responsavelId"`
+	SituacaoID            int32				`json:"situacaoId"`
+	TipoID                int32				`json:"tipoId"`
+	CriadoEm              pgtype.Timestamp	`json:"criadoEm"`
+	UltimaMovEm           pgtype.Timestamp	`json:"ultimaMovEm"`
+	CreatedAt             pgtype.Timestamp	`json:"createdAt"`
+	UpdatedAt             pgtype.Timestamp	`json:"updatedAt"`
+	ProjetoNome           string				`json:"projetoNome"`
+	CriadoPorNome         string				`json:"criadoPorNome"`
+	ResponsavelNome       string				`json:"responsavelNome"`
+	SituacaoDescricao     string				`json:"situacaoDescricao"`
+	SituacaoEncerraTarefa pgtype.Bool		`json:"situacaoEncerraTarefa"`
+	TipoDescricao         string				`json:"tipoDescricao"`
 }
 
 func (q *Queries) ListTarefas(ctx context.Context, arg ListTarefasParams) ([]ListTarefasRow, error) {
@@ -945,26 +945,26 @@ type ListTarefasMovimentadasNoPeriodoParams struct {
 }
 
 type ListTarefasMovimentadasNoPeriodoRow struct {
-	ID                    int32
-	Numero                int32
-	Ano                   int32
-	Titulo                string
-	Descricao             pgtype.Text
-	ProjetoID             int32
-	CriadoPorID           int32
-	ResponsavelID         int32
-	SituacaoID            int32
-	TipoID                int32
-	CriadoEm              pgtype.Timestamp
-	UltimaMovEm           pgtype.Timestamp
-	CreatedAt             pgtype.Timestamp
-	UpdatedAt             pgtype.Timestamp
-	ProjetoNome           string
-	CriadoPorNome         string
-	ResponsavelNome       string
-	SituacaoDescricao     string
-	SituacaoEncerraTarefa pgtype.Bool
-	TipoDescricao         string
+	ID                    int32				`json:"id"`
+	Numero                int32				`json:"numero"`
+	Ano                   int32				`json:"ano"`
+	Titulo                string				`json:"titulo"`
+	Descricao             pgtype.Text		`json:"descricao"`
+	ProjetoID             int32				`json:"projetoID"`
+	CriadoPorID           int32				`json:"criadoPorID"`
+	ResponsavelID         int32				`json:"responsavelID"`
+	SituacaoID            int32				`json:"situacaoID"`
+	TipoID                int32				`json:"tipoID"`
+	CriadoEm              pgtype.Timestamp	`json:"criadoEm"`
+	UltimaMovEm           pgtype.Timestamp	`json:"ultimaMovEm"`
+	CreatedAt             pgtype.Timestamp	`json:"createdAt"`
+	UpdatedAt             pgtype.Timestamp	`json:"updatedAt"`
+	ProjetoNome           string				`json:"projetoNome"`
+	CriadoPorNome         string				`json:"criadoPorNome"`
+	ResponsavelNome       string				`json:"responsavelNome"`
+	SituacaoDescricao     string				`json:"situacaoDescricao"`
+	SituacaoEncerraTarefa pgtype.Bool		`json:"situacaoEncerraTarefa"`
+	TipoDescricao         string				`json:"tipoDescricao"`
 }
 
 func (q *Queries) ListTarefasMovimentadasNoPeriodo(ctx context.Context, arg ListTarefasMovimentadasNoPeriodoParams) ([]ListTarefasMovimentadasNoPeriodoRow, error) {
@@ -1107,13 +1107,13 @@ RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, respons
 `
 
 type UpdateTarefaParams struct {
-	ID            int32
-	Titulo        string
-	Descricao     pgtype.Text
-	ProjetoID     int32
-	ResponsavelID int32
-	SituacaoID    int32
-	TipoID        int32
+	ID            int32       `json:"id"`
+	Titulo        string      `json:"titulo"`
+	Descricao     pgtype.Text `json:"descricao"`
+	ProjetoID     int32       `json:"projetoId"`
+	ResponsavelID int32       `json:"responsavelId"`
+	SituacaoID    int32       `json:"situacaoId"`
+	TipoID        int32       `json:"tipoId"`
 }
 
 func (q *Queries) UpdateTarefa(ctx context.Context, arg UpdateTarefaParams) (Tarefa, error) {
@@ -1155,8 +1155,9 @@ RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id, criado_em, creat
 `
 
 type UpdateTarefaMovimentacaoParams struct {
-	ID        int32
-	Descricao pgtype.Text
+	ID          int32      `json:"id"`
+	Descricao   pgtype.Text `json:"descricao"`
+	SituacaoID  int32      `json:"situacaoId"`
 }
 
 func (q *Queries) UpdateTarefaMovimentacao(ctx context.Context, arg UpdateTarefaMovimentacaoParams) (TarefasMovimentaco, error) {
@@ -1185,9 +1186,9 @@ RETURNING id, descricao, encerra_tarefa, criado_em, created_at, updated_at
 `
 
 type UpdateTarefaSituacaoParams struct {
-	ID            int32
-	Descricao     string
-	EncerraTarefa pgtype.Bool
+	ID            int32        `json:"id"`
+	Descricao     string       `json:"descricao"`
+	EncerraTarefa pgtype.Bool  `json:"encerraTarefa"`
 }
 
 func (q *Queries) UpdateTarefaSituacao(ctx context.Context, arg UpdateTarefaSituacaoParams) (TarefasSituaco, error) {
@@ -1213,8 +1214,8 @@ RETURNING id, descricao, criado_em, created_at, updated_at
 `
 
 type UpdateTarefaTipoParams struct {
-	ID        int32
-	Descricao string
+	ID        int32  `json:"id"`
+	Descricao string `json:"descricao"`
 }
 
 func (q *Queries) UpdateTarefaTipo(ctx context.Context, arg UpdateTarefaTipoParams) (TarefasTipo, error) {
@@ -1241,10 +1242,10 @@ RETURNING id, nome, email, created_at, updated_at
 `
 
 type UpdateUsuarioParams struct {
-	Nome  string
-	Email string
-	Senha interface{}
-	ID    int32
+	Nome  string      `json:"nome"`
+	Email string      `json:"email"`
+	Senha interface{} `json:"senha"`
+	ID    int32       `json:"id"`
 }
 
 type UpdateUsuarioRow struct {

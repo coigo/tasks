@@ -329,7 +329,7 @@ export function TarefaDetail() {
           {tarefa && (
             <p className="text-sm text-gray-500">
               Criada por {tarefa.criado_por_nome} em{' '}
-              {format(new Date(tarefa.criado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+              {format(new Date(tarefa.criadoEm), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
             </p>
           )}
         </div>
