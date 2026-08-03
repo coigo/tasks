@@ -33,18 +33,18 @@ interface Tarefa {
   ano: number;
   titulo: string;
   descricao: string;
-  projeto_id: number;
-  responsavel_id: number;
-  situacao_id: number;
-  tipo_id: number;
-  criado_por_nome: string;
-  responsavel_nome: string;
-  situacao_descricao: string;
-  tipo_descricao: string;
-  projeto_nome: string;
-  situacao_encerra_tarefa: boolean;
-  criado_em: string;
-  ultima_mov_em: string;
+  projetoId: number;
+  responsavelId: number;
+  situacaoId: number;
+  tipoId: number;
+  criadoPorNome: string;
+  responsavelNome: string;
+  situacaoDescricao: string;
+  tipoDescricao: string;
+  projetoNome: string;
+  situacaoEncerraTarefa: boolean;
+  criadoEm: string;
+  ultimaMovEm: string;
 }
 
 interface Movimentacao {
@@ -99,6 +99,7 @@ export function TarefaDetail() {
   const [anexos, setAnexos] = useState<Anexo[]>([]);
   const [arquivosTemp, setArquivosTemp] = useState<Array<{ uuid: string; nome: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const [novaMovimentacao, setNovaMovimentacao] = useState({ situacao_id: '', descricao: '' });
   const [editandoMovimentacao, setEditandoMovimentacao] = useState<Movimentacao | null>(null);
 
@@ -180,10 +181,25 @@ export function TarefaDetail() {
       };
       await atualizar(payload, `/tarefas/${tarefaId}`);
       toast.success('Tarefa atualizada');
+      setIsEditing(false);
       carregarTarefa();
     } catch {
       toast.error('Erro ao atualizar tarefa');
     }
+  };
+
+  const handleCancelEdit = () => {
+    if (tarefa) {
+      reset({
+        titulo: tarefa.titulo,
+        descricao: tarefa.descricao || '',
+        projeto_id: String(tarefa.projetoId),
+        responsavel_id: String(tarefa.responsavelId),
+        situacao_id: String(tarefa.situacaoId),
+        tipo_id: String(tarefa.tipoId),
+      });
+    }
+    setIsEditing(false);
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -328,7 +344,7 @@ export function TarefaDetail() {
           </h1>
           {tarefa && (
             <p className="text-sm text-gray-500">
-              Criada por {tarefa.criado_por_nome} em{' '}
+              Criada por {tarefa.criadoPorNome} em{' '}
               {format(new Date(tarefa.criadoEm), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
             </p>
           )}
@@ -337,22 +353,75 @@ export function TarefaDetail() {
 
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab}>
         <TabPanel isActive={activeTab === 'geral'}>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <Card title="Dados da tarefa">
-              <TarefaFormFields
-                register={register}
-                control={control}
-                errors={errors}
-                opcoes={opcoes}
-              />
-              <div className="mt-6 flex justify-end">
-                <Button type="submit" isLoading={isSubmitting}>
-                  <Save size={18} />
-                  Salvar alterações
+          {isEditing ? (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <Card
+                title="Dados da tarefa"
+                action={
+                  <Button variant="secondary" size="sm" onClick={handleCancelEdit}>
+                    Cancelar
+                  </Button>
+                }
+              >
+                <TarefaFormFields
+                  register={register}
+                  control={control}
+                  errors={errors}
+                  opcoes={opcoes}
+                />
+                <div className="mt-6 flex justify-end">
+                  <Button type="submit" isLoading={isSubmitting}>
+                    <Save size={18} />
+                    Salvar alterações
+                  </Button>
+                </div>
+              </Card>
+            </form>
+          ) : (
+            <Card
+              title="Dados da tarefa"
+              action={
+                <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
+                  <Pencil size={16} />
+                  Editar
                 </Button>
-              </div>
+              }
+            >
+              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Título</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{tarefa?.titulo}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Projeto</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{tarefa?.projetoId}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Responsável</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{tarefa?.responsavelNome}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Situação</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{tarefa?.situacaoDescricao}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Tipo</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{tarefa?.tipoDescricao}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Criada por</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{tarefa?.criadoPorNome}</dd>
+                </div>
+              </dl>
+                  {tarefa?.descricao && (
+                          
+                <div className="mt-6 border-t-gray-300 border-t pt-6">
+                  <dt className="text-sm font-medium text-gray-500">Detalhes</dt>
+                  <dd className="mt-2 text-sm text-gray-900 prose" dangerouslySetInnerHTML={{ __html: tarefa.descricao }} />
+                </div>
+              )}
             </Card>
-          </form>
+          )}
         </TabPanel>
 
         <TabPanel isActive={activeTab === 'arquivos'}>

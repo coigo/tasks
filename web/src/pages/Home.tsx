@@ -15,12 +15,12 @@ interface Tarefa {
   numero: number;
   ano: number;
   titulo: string;
-  situacao_descricao: string;
-  situacao_encerra_tarefa: boolean;
-  tipo_descricao: string;
-  responsavel_nome: string;
-  projeto_nome: string;
-  ultima_mov_em: string;
+  situacaoDescricao: string;
+  situacaoEncerraTarefa: boolean;
+  tipoDescricao: string;
+  responsavelNome: string;
+  projetoNome: string;
+  ultimaMovEm: string;
 }
 
 export function Home() {
@@ -161,22 +161,27 @@ export function Home() {
                 to={`/tarefas/${tarefa.id}`}
                 className="flex items-center justify-between py-4 hover:bg-gray-50 -mx-5 px-5 transition-colors"
               >
+                  {
+                     (() => {
+                        console.log(JSON.stringify(tarefa))
+                        return <></>
+                     })()}
                 <div>
                   <p className="font-medium text-gray-900">
                     #{tarefa.numero}/{tarefa.ano} {tarefa.titulo}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {tarefa.projeto_nome} • {tarefa.responsavel_nome}
+                     <p className="text-sm text-gray-500">
+                    {tarefa.projetoNome} • {tarefa.responsavelNome}
                   </p>
                 </div>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    tarefa.situacao_encerra_tarefa
+                    tarefa.situacaoEncerraTarefa
                       ? 'bg-success/10 text-success'
                       : 'bg-warning/10 text-warning'
                   }`}
                 >
-                  {tarefa.situacao_descricao}
+                  {tarefa.situacaoDescricao}
                 </span>
               </Link>
             ))}

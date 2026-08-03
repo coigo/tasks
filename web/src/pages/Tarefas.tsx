@@ -11,33 +11,33 @@ interface Tarefa {
   numero: number;
   ano: number;
   titulo: string;
-  situacao_descricao: string;
-  situacao_encerra_tarefa: boolean;
-  tipo_descricao: string;
-  responsavel_nome: string;
-  projeto_nome: string;
-  ultima_mov_em: string;
+  situacaoDescricao: string;
+  situacaoEncerraTarefa: boolean;
+  tipoDescricao: string;
+  responsavelNome: string;
+  projetoNome: string;
+  ultimaMovEm: string;
 }
 
 interface Filtro {
-  responsavel_id: string;
-  situacao_id: string;
-  tipo_id: string;
-  projeto_id: string;
+  responsavelId: string;
+  situacaoId: string;
+  tipoId: string;
+  projetoId: string;
   busca: string;
-  incluir_encerradas: boolean;
+  incluirEncerradas: boolean;
 }
 
 export function Tarefas() {
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filtros, setFiltros] = useState<Filtro>({
-    responsavel_id: '',
-    situacao_id: '',
-    tipo_id: '',
-    projeto_id: '',
+    responsavelId: '',
+    situacaoId: '',
+    tipoId: '',
+    projetoId: '',
     busca: '',
-    incluir_encerradas: false,
+    incluirEncerradas: false,
   });
   const [opcoes, setOpcoes] = useState({
     usuarios: [] as Array<{ id: number; nome: string }>,
@@ -69,12 +69,12 @@ export function Tarefas() {
       setIsLoading(false);
       try {
         const params = new URLSearchParams();
-        if (filtros.responsavel_id) params.append('responsavel_id', filtros.responsavel_id);
-        if (filtros.situacao_id) params.append('situacao_id', filtros.situacao_id);
-        if (filtros.tipo_id) params.append('tipo_id', filtros.tipo_id);
-        if (filtros.projeto_id) params.append('projeto_id', filtros.projeto_id);
+        if (filtros.responsavelId) params.append('responsavel_id', filtros.responsavelId);
+        if (filtros.situacaoId) params.append('situacao_id', filtros.situacaoId);
+        if (filtros.tipoId) params.append('tipo_id', filtros.tipoId);
+        if (filtros.projetoId) params.append('projeto_id', filtros.projetoId);
         if (filtros.busca) params.append('busca', filtros.busca);
-        if (filtros.incluir_encerradas) params.append('incluir_encerradas', 'true');
+        if (filtros.incluirEncerradas) params.append('incluir_encerradas', 'true');
 
         const response = await api.get(`/tarefas?${params.toString()}`);
         setTarefas(response.data);
@@ -105,26 +105,26 @@ export function Tarefas() {
           <FormSelect
             label="Responsável"
             options={opcoes.usuarios.map((u) => ({ value: u.id, label: u.nome }))}
-            value={filtros.responsavel_id}
-            onChange={(e) => setFiltros({ ...filtros, responsavel_id: e.target.value })}
+            value={filtros.responsavelId}
+            onChange={(e) => setFiltros({ ...filtros, responsavelId: e.target.value })}
           />
           <FormSelect
             label="Situação"
             options={opcoes.situacoes.map((s) => ({ value: s.id, label: s.descricao }))}
-            value={filtros.situacao_id}
-            onChange={(e) => setFiltros({ ...filtros, situacao_id: e.target.value })}
+            value={filtros.situacaoId}
+            onChange={(e) => setFiltros({ ...filtros, situacaoId: e.target.value })}
           />
           <FormSelect
             label="Tipo"
             options={opcoes.tipos.map((t) => ({ value: t.id, label: t.descricao }))}
-            value={filtros.tipo_id}
-            onChange={(e) => setFiltros({ ...filtros, tipo_id: e.target.value })}
+            value={filtros.tipoId}
+            onChange={(e) => setFiltros({ ...filtros, tipoId: e.target.value })}
           />
           <FormSelect
             label="Projeto"
             options={opcoes.projetos.map((p) => ({ value: p.id, label: p.nome }))}
-            value={filtros.projeto_id}
-            onChange={(e) => setFiltros({ ...filtros, projeto_id: e.target.value })}
+            value={filtros.projetoId}
+            onChange={(e) => setFiltros({ ...filtros, projetoId: e.target.value })}
           />
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-gray-700">Busca</label>
@@ -144,8 +144,8 @@ export function Tarefas() {
           <Filter size={16} />
           <input
             type="checkbox"
-            checked={filtros.incluir_encerradas}
-            onChange={(e) => setFiltros({ ...filtros, incluir_encerradas: e.target.checked })}
+            checked={filtros.incluirEncerradas}
+            onChange={(e) => setFiltros({ ...filtros, incluirEncerradas: e.target.checked })}
             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
           Incluir tarefas encerradas
@@ -170,17 +170,17 @@ export function Tarefas() {
                     #{tarefa.numero}/{tarefa.ano} {tarefa.titulo}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {tarefa.projeto_nome} • {tarefa.tipo_descricao} • Responsável: {tarefa.responsavel_nome}
+                    {tarefa.projetoNome} • {tarefa.tipoDescricao} • Responsável: {tarefa.responsavelNome}
                   </p>
                 </div>
                 <span
                   className={`self-start px-3 py-1 rounded-full text-xs font-medium ${
-                    tarefa.situacao_encerra_tarefa
+                    tarefa.situacaoEncerraTarefa
                       ? 'bg-success/10 text-success'
                       : 'bg-warning/10 text-warning'
                   }`}
                 >
-                  {tarefa.situacao_descricao}
+                  {tarefa.situacaoDescricao}
                 </span>
               </Link>
             ))}
