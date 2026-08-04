@@ -111,21 +111,18 @@ func (s *MinioStorage) UploadTemp(ctx context.Context, nome string, conteudo io.
 }
 
 func (s *MinioStorage) MoverTempParaTarefa(ctx context.Context, arquivoUUID string, tarefaID int32) (string, error) {
-	tempPath := fmt.Sprintf("temp/%s", arquivoUUID)
 
+	tempPath := fmt.Sprintf("temp/%s", arquivoUUID)
+	copySource := fmt.Sprintf("%s/%s", s.bucket, tempPath)
 	destino := fmt.Sprintf("tarefas/%d/%s", tarefaID, arquivoUUID)
 
 	_, err := s.client.CopyObject(ctx, &s3.CopyObjectInput{
-		Bucket: 	aws.String(s.bucket),
-		CopySource: aws.String(tempPath),
-		Key: 		aws.String(destino),
+		Bucket: 		aws.String(s.bucket),
+		CopySource: aws.String(copySource),
+		Key: 			aws.String(destino),
 	})
 	if err != nil {
-		return "", fmt.Errorf("erro ao copiar arquivo: %w", err)
-	}
-
-	if err != nil {
-		return "", fmt.Errorf("erro ao enviar arquivo para s3: %w", err)
+		return "", fmt.Errorf("erro ao mover arquivo: %w", err)
 	}
 
 	return destino, nil
