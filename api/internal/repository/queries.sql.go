@@ -175,7 +175,7 @@ type CreateTarefaRow struct {
 	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
 }
 
-func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (CreateTarefaRow, error) {
+func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Tarefa, error) {
 	row := q.db.QueryRow(ctx, createTarefa,
 		arg.Numero,
 		arg.Ano,
@@ -187,7 +187,7 @@ func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Cre
 		arg.SituacaoID,
 		arg.TipoID,
 	)
-	var i CreateTarefaRow
+	var i Tarefa
 	err := row.Scan(
 		&i.ID,
 		&i.Numero,
@@ -199,9 +199,8 @@ func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Cre
 		&i.ResponsavelID,
 		&i.SituacaoID,
 		&i.TipoID,
-		&i.UltimaMovEm,
 		&i.CriadoEm,
-		&i.AtualizadoEm,
+		&i.UltimaMovEm,
 	)
 	return i, err
 }
@@ -1124,7 +1123,7 @@ type UpdateTarefaRow struct {
 	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
 }
 
-func (q *Queries) UpdateTarefa(ctx context.Context, arg UpdateTarefaParams) (UpdateTarefaRow, error) {
+func (q *Queries) UpdateTarefa(ctx context.Context, arg UpdateTarefaParams) (Tarefa, error) {
 	row := q.db.QueryRow(ctx, updateTarefa,
 		arg.ID,
 		arg.Titulo,
@@ -1134,7 +1133,7 @@ func (q *Queries) UpdateTarefa(ctx context.Context, arg UpdateTarefaParams) (Upd
 		arg.SituacaoID,
 		arg.TipoID,
 	)
-	var i UpdateTarefaRow
+	var i Tarefa
 	err := row.Scan(
 		&i.ID,
 		&i.Numero,
