@@ -1,0 +1,80 @@
+-- +goose Up
+ALTER TABLE usuarios
+    DROP COLUMN created_at,
+    DROP COLUMN updated_at,
+
+    ADD COLUMN criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE projetos
+    DROP COLUMN created_at,
+    DROP COLUMN updated_at,
+
+    ADD COLUMN atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE tarefas_situacoes
+    DROP COLUMN created_at,
+    DROP COLUMN updated_at,
+
+    ADD COLUMN atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    
+ALTER TABLE tarefas_tipo
+    DROP COLUMN created_at,
+    DROP COLUMN updated_at,
+
+    ADD COLUMN atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    
+ALTER TABLE tarefas
+    DROP COLUMN created_at,
+    DROP COLUMN updated_at,
+
+    ADD COLUMN atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    
+ALTER TABLE tarefas_movimentacoes
+    DROP COLUMN created_at,
+    DROP COLUMN updated_at,
+
+    ADD COLUMN atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    
+ALTER TABLE tarefas_anexos
+    DROP COLUMN created_at,
+    DROP COLUMN updated_at,
+
+    ADD COLUMN atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+-- +goose Down
+ALTER TABLE tarefas_anexos
+    DROP COLUMN atualizado_em,
+    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE tarefas_movimentacoes
+    DROP COLUMN atualizado_em,
+    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE tarefas
+    DROP COLUMN atualizado_em,
+    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE tarefas_tipo
+    DROP COLUMN atualizado_em,
+    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE tarefas_situacoes
+    DROP COLUMN atualizado_em,
+    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE projetos
+    DROP COLUMN atualizado_em,
+    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE usuarios
+    DROP COLUMN coluna_antiga_1,
+    DROP COLUMN coluna_antiga_2,
+    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;

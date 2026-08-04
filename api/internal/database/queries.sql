@@ -1,102 +1,102 @@
 -- name: GetUsuarioByEmail :one
-SELECT id, nome, email, senha, created_at, updated_at FROM usuarios
+SELECT id, nome, email, senha, criado_em, atualizado_em FROM usuarios
 WHERE email = $1 limit 1;
 
 -- name: GetUsuarioById :one
-SELECT id, nome, email, senha, created_at, updated_at FROM usuarios
+SELECT id, nome, email, senha, criado_em, atualizado_em FROM usuarios
 WHERE id = $1 limit 1;
 
 -- name: ListUsuarios :many
-SELECT id, nome, email, created_at, updated_at FROM usuarios
+SELECT id, nome, email, criado_em, atualizado_em FROM usuarios
 ORDER BY nome;
 
 -- name: CreateUsuario :one
 INSERT INTO usuarios (nome, email, senha)
 VALUES ($1, $2, $3)
-RETURNING id, nome, email, created_at, updated_at;
+RETURNING id, nome, email, criado_em, atualizado_em;
 
 -- name: UpdateUsuario :one
 UPDATE usuarios
 SET nome = sqlc.arg(nome),
     email = sqlc.arg(email),
     senha = COALESCE(NULLIF(sqlc.arg(senha), ''), senha),
-    updated_at = CURRENT_TIMESTAMP
+    atualizado_em = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg(id)
-RETURNING id, nome, email, created_at, updated_at;
+RETURNING id, nome, email, criado_em, atualizado_em;
 
 -- name: DeleteUsuario :exec
 DELETE FROM usuarios WHERE id = $1;
 
 -- name: GetProjetoById :one
-SELECT id, nome, criado_em, deletado_em, created_at, updated_at FROM projetos
+SELECT id, nome, criado_em, deletado_em, atualizado_em FROM projetos
 WHERE id = $1 limit 1;
 
 -- name: ListProjetos :many
-SELECT id, nome, criado_em, deletado_em, created_at, updated_at FROM projetos
+SELECT id, nome, criado_em, deletado_em, atualizado_em FROM projetos
 WHERE deletado_em IS NULL
 ORDER BY nome;
 
 -- name: CreateProjeto :one
 INSERT INTO projetos (nome)
 VALUES ($1)
-RETURNING id, nome, criado_em, deletado_em, created_at, updated_at;
+RETURNING id, nome, criado_em, deletado_em, atualizado_em;
 
 -- name: UpdateProjeto :one
 UPDATE projetos
 SET nome = $2,
-    updated_at = CURRENT_TIMESTAMP
+    atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, nome, criado_em, deletado_em, created_at, updated_at;
+RETURNING id, nome, criado_em, deletado_em, atualizado_em;
 
 -- name: DeleteProjeto :exec
 UPDATE projetos
 SET deletado_em = CURRENT_TIMESTAMP,
-    updated_at = CURRENT_TIMESTAMP
+    atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1;
 
 -- name: GetTarefaSituacaoById :one
-SELECT id, descricao, encerra_tarefa, criado_em, created_at, updated_at FROM tarefas_situacoes
+SELECT id, descricao, encerra_tarefa, criado_em, atualizado_em FROM tarefas_situacoes
 WHERE id = $1 limit 1;
 
 -- name: ListTarefaSituacoes :many
-SELECT id, descricao, encerra_tarefa, criado_em, created_at, updated_at FROM tarefas_situacoes
+SELECT id, descricao, encerra_tarefa, criado_em, atualizado_em FROM tarefas_situacoes
 ORDER BY descricao;
 
 -- name: CreateTarefaSituacao :one
 INSERT INTO tarefas_situacoes (descricao, encerra_tarefa)
 VALUES ($1, $2)
-RETURNING id, descricao, encerra_tarefa, criado_em, created_at, updated_at;
+RETURNING id, descricao, encerra_tarefa, criado_em, atualizado_em;
 
 -- name: UpdateTarefaSituacao :one
 UPDATE tarefas_situacoes
 SET descricao = $2,
     encerra_tarefa = $3,
-    updated_at = CURRENT_TIMESTAMP
+    atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, descricao, encerra_tarefa, criado_em, created_at, updated_at;
+RETURNING id, descricao, encerra_tarefa, criado_em, atualizado_em;
 
 -- name: DeleteTarefaSituacao :exec
 DELETE FROM tarefas_situacoes WHERE id = $1;
 
 -- name: GetTarefaTipoById :one
-SELECT id, descricao, criado_em, created_at, updated_at FROM tarefas_tipo
+SELECT id, descricao, criado_em, atualizado_em FROM tarefas_tipo
 WHERE id = $1 limit 1;
 
 -- name: ListTarefaTipos :many
-SELECT id, descricao, criado_em, created_at, updated_at FROM tarefas_tipo
+SELECT id, descricao, criado_em, atualizado_em FROM tarefas_tipo
 ORDER BY descricao;
 
 -- name: CreateTarefaTipo :one
 INSERT INTO tarefas_tipo (descricao)
 VALUES ($1)
-RETURNING id, descricao, criado_em, created_at, updated_at;
+RETURNING id, descricao, criado_em, atualizado_em;
 
 -- name: UpdateTarefaTipo :one
 UPDATE tarefas_tipo
 SET descricao = $2,
-    updated_at = CURRENT_TIMESTAMP
+    atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, descricao, criado_em, created_at, updated_at;
+RETURNING id, descricao, criado_em, atualizado_em;
 
 -- name: DeleteTarefaTipo :exec
 DELETE FROM tarefas_tipo WHERE id = $1;
@@ -110,12 +110,12 @@ INSERT INTO tarefas (
     criado_por_id, responsavel_id, situacao_id, tipo_id
 )
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, criado_em, ultima_mov_em, created_at, updated_at;
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, ultima_mov_em, criado_em, atualizado_em;
 
 -- name: GetTarefaById :one
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
-       t.criado_em, t.ultima_mov_em, t.created_at, t.updated_at,
+       t.ultima_mov_em, t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
@@ -133,7 +133,7 @@ WHERE t.id = $1 limit 1;
 -- name: ListTarefas :many
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
-       t.criado_em, t.ultima_mov_em, t.created_at, t.updated_at,
+       t.ultima_mov_em, t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
@@ -163,15 +163,15 @@ SET titulo = $2,
     situacao_id = $6,
     tipo_id = $7,
     ultima_mov_em = CURRENT_TIMESTAMP,
-    updated_at = CURRENT_TIMESTAMP
+    atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, criado_em, ultima_mov_em, created_at, updated_at;
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, ultima_mov_em, criado_em, atualizado_em;
 
 -- name: UpdateSituacaoTarefa :exec
 UPDATE tarefas
 SET situacao_id = $2,
     ultima_mov_em = CURRENT_TIMESTAMP,
-    updated_at = CURRENT_TIMESTAMP
+    atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1;
 
 -- name: DeleteTarefa :exec
@@ -201,14 +201,14 @@ ORDER BY u.nome;
 -- name: CreateTarefaMovimentacao :one
 INSERT INTO tarefas_movimentacoes (tarefa_id, situacao_id, descricao, criado_por_id)
 VALUES ($1, $2, $3, $4)
-RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id, criado_em, created_at, updated_at;
+RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id,criado_em, atualizado_em;
 
 -- name: GetTarefaMovimentacaoById :one
-SELECT id, tarefa_id, situacao_id, descricao, criado_por_id, criado_em, created_at, updated_at FROM tarefas_movimentacoes
+SELECT id, tarefa_id, situacao_id, descricao, criado_por_id, criado_em, atualizado_em FROM tarefas_movimentacoes
 WHERE id = $1 limit 1;
 
 -- name: ListTarefaMovimentacoesByTarefa :many
-SELECT m.id, m.tarefa_id, m.situacao_id, m.descricao, m.criado_por_id, m.criado_em, m.created_at, m.updated_at,
+SELECT m.id, m.tarefa_id, m.situacao_id, m.descricao, m.criado_por_id, m.criado_em, m.atualizado_em,
        s.descricao AS situacao_descricao,
        u.nome AS criado_por_nome
 FROM tarefas_movimentacoes m
@@ -220,9 +220,9 @@ ORDER BY m.criado_em DESC;
 -- name: UpdateTarefaMovimentacao :one
 UPDATE tarefas_movimentacoes
 SET descricao = $2,
-    updated_at = CURRENT_TIMESTAMP
+    atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id, criado_em, created_at, updated_at;
+RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id,criado_em, atualizado_em;
 
 -- name: DeleteTarefaMovimentacao :exec
 DELETE FROM tarefas_movimentacoes WHERE id = $1;
@@ -230,15 +230,15 @@ DELETE FROM tarefas_movimentacoes WHERE id = $1;
 -- name: CreateTarefaAnexo :one
 INSERT INTO tarefas_anexos (tarefa_id, uuid, nome, local, tamanho)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, tarefa_id, uuid, nome, local, tamanho, criado_em, created_at, updated_at;
+RETURNING id, tarefa_id, uuid, nome, local, tamanho,criado_em, atualizado_em;
 
 -- name: ListTarefaAnexosByTarefa :many
-SELECT id, tarefa_id, uuid, nome, local, tamanho, criado_em, created_at, updated_at FROM tarefas_anexos
+SELECT id, tarefa_id, uuid, nome, local, tamanho,criado_em, atualizado_em FROM tarefas_anexos
 WHERE tarefa_id = $1
 ORDER BY criado_em DESC;
 
 -- name: GetTarefaAnexoById :one
-SELECT id, tarefa_id, uuid, nome, local, tamanho, criado_em, created_at, updated_at FROM tarefas_anexos
+SELECT id, tarefa_id, uuid, nome, local, tamanho,criado_em, atualizado_em FROM tarefas_anexos
 WHERE id = $1 limit 1;
 
 -- name: DeleteTarefaAnexo :exec
@@ -247,7 +247,7 @@ DELETE FROM tarefas_anexos WHERE id = $1;
 -- name: ListTarefasMovimentadasNoPeriodo :many
 SELECT DISTINCT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
-       t.criado_em, t.ultima_mov_em, t.created_at, t.updated_at,
+       t.criado_em, t.ultima_mov_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
