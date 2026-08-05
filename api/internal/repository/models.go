@@ -75,4 +75,5 @@ type Usuario struct {
 	Senha        string           `json:"senha"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+	Notificacoes []byte           `json:"notificacoes"`
 }

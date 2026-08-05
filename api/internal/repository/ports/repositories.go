@@ -20,6 +20,9 @@ type IUsuarioRepository interface {
 	ListUsuarios(ctx context.Context) ([]repository.ListUsuariosRow, error)
 	UpdateUsuario(ctx context.Context, arg repository.UpdateUsuarioParams) (repository.UpdateUsuarioRow, error)
 	DeleteUsuario(ctx context.Context, id int32) error
+	UpdateUsuarioNotificacoes(ctx context.Context, arg repository.UpdateUsuarioNotificacoesParams) error
+	ListNotificacoes(ctx context.Context, id int32) ([]byte, error)
+	
 }
 
 type ITarefaSituacaoRepository interface {

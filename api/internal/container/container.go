@@ -77,10 +77,11 @@ func New(ctx context.Context, cfg *ContainerConfig) error {
 	})
 
 	handlers.NewTarefaHandler(handlers.TarefaHandlerConfig{
-		Router:       cfg.Router,
-		Service:      tarefaService,
-		AnexoService: tarefaAnexoService,
-		Auth:         authService,
+		Router:         cfg.Router,
+		Service:        tarefaService,
+		AnexoService:   tarefaAnexoService,
+		UsuarioService: usuarioService,
+		Auth:           authService,
 	})
 
 	handlers.NewTarefaMovimentacaoHandler(handlers.TarefaMovimentacaoHandlerConfig{

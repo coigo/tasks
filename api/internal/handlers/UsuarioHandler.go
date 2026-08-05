@@ -30,6 +30,8 @@ func NewUsuarioHandler(cfg UsuarioHandlerConfig) *UsuarioHandler {
 	group.GET("/:id", handler.BuscarPorId)
 	group.PUT("/:id", handler.Atualizar)
 	group.DELETE("/:id", handler.Remover)
+	group.GET("/notificacoes", handler.Remover)
+	
 
 	return handler
 }
@@ -118,4 +120,15 @@ func (h *UsuarioHandler) Remover(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "usuario removido"})
+}
+
+func (h *UsuarioHandler) BuscarNotificacoes(ctx *gin.Context) {
+	usuarioId := middleware.GetUsuarioID(ctx)
+	
+	notificacoes, err := h.service.BuscarNotificacoes(ctx.Request.Context(), usuarioId)
+	if  err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, notificacoes)
 }

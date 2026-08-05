@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"tasks/internal/middleware"
+	"tasks/internal/models"
 	"tasks/internal/services"
 	"tasks/internal/utils"
 
@@ -13,19 +14,23 @@ import (
 type TarefaHandler struct {
 	service      *services.TarefaService
 	anexoService *services.TarefaAnexoService
+	usuarioService *services.UsuarioService
+	
 }
 
 type TarefaHandlerConfig struct {
-	Router       *gin.Engine
-	Service      *services.TarefaService
-	AnexoService *services.TarefaAnexoService
-	Auth         *services.AuthService
+	Router         *gin.Engine
+	Service        *services.TarefaService
+	UsuarioService *services.UsuarioService
+	AnexoService   *services.TarefaAnexoService
+	Auth           *services.AuthService
 }
 
 func NewTarefaHandler(cfg TarefaHandlerConfig) *TarefaHandler {
 	handler := &TarefaHandler{
-		service:      cfg.Service,
-		anexoService: cfg.AnexoService,
+		service:        cfg.Service,
+		anexoService:   cfg.AnexoService,
+		usuarioService: cfg.UsuarioService,
 	}
 	group := cfg.Router.Group("/tarefas")
 	group.Use(middleware.AuthMiddleware(cfg.Auth))
@@ -109,6 +114,13 @@ func (h *TarefaHandler) Criar(ctx *gin.Context) {
 			return
 		}
 	}
+
+	err = h.usuarioService.NotificarUsuario(ctx, models.CriarUsuarioNotificacao{
+		ResponsavelId: criadoPorID,
+		TarefaId: tarefa.ID,
+		ProjetoId: tarefa.ProjetoID,
+		UsuarioNotificadoId: tarefa.ResponsavelID,
+	})
 
 	ctx.JSON(http.StatusCreated, tarefa)
 }

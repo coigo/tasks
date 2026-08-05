@@ -1,0 +1,19 @@
+# Stage 1: Build the binary
+FROM golang:1.26-alpine3.23 AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o /app/server ./cmd/server
+
+# Stage 2: Create minimal runtime image
+FROM scratch
+# Copy CA certificates for HTTPS support
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Copy the binary
+COPY --from=builder /app/server /server
+# Run as non-root (optional: add user/group files if needed)
+USER nonroot
+EXPOSE 8080
+ENTRYPOINT ["/server"]   

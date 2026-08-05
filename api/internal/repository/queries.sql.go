@@ -199,8 +199,9 @@ func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Tar
 		&i.ResponsavelID,
 		&i.SituacaoID,
 		&i.TipoID,
-		&i.CriadoEm,
 		&i.UltimaMovEm,
+		&i.CriadoEm,
+		&i.AtualizadoEm,
 	)
 	return i, err
 }
@@ -593,6 +594,15 @@ SELECT id, nome, email, senha, criado_em, atualizado_em FROM usuarios
 WHERE email = $1 limit 1
 `
 
+type GetUsuarioByEmailRow struct {
+	ID           int32            `json:"id"`
+	Nome         string           `json:"nome"`
+	Email        string           `json:"email"`
+	Senha        string           `json:"senha"`
+	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+}
+
 func (q *Queries) GetUsuarioByEmail(ctx context.Context, email string) (Usuario, error) {
 	row := q.db.QueryRow(ctx, getUsuarioByEmail, email)
 	var i Usuario
@@ -608,9 +618,19 @@ func (q *Queries) GetUsuarioByEmail(ctx context.Context, email string) (Usuario,
 }
 
 const getUsuarioById = `-- name: GetUsuarioById :one
-SELECT id, nome, email, senha, criado_em, atualizado_em FROM usuarios
+SELECT id, nome, email, notificacoes, senha, criado_em, atualizado_em FROM usuarios
 WHERE id = $1 limit 1
 `
+
+type GetUsuarioByIdRow struct {
+	ID           int32            `json:"id"`
+	Nome         string           `json:"nome"`
+	Email        string           `json:"email"`
+	Notificacoes []byte           `json:"notificacoes"`
+	Senha        string           `json:"senha"`
+	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+}
 
 func (q *Queries) GetUsuarioById(ctx context.Context, id int32) (Usuario, error) {
 	row := q.db.QueryRow(ctx, getUsuarioById, id)
@@ -619,11 +639,25 @@ func (q *Queries) GetUsuarioById(ctx context.Context, id int32) (Usuario, error)
 		&i.ID,
 		&i.Nome,
 		&i.Email,
+		&i.Notificacoes,
 		&i.Senha,
 		&i.CriadoEm,
 		&i.AtualizadoEm,
 	)
 	return i, err
+}
+
+const listNotificacoes = `-- name: ListNotificacoes :one
+SELECT notificacoes
+FROM usuarios
+WHERE id = $1
+`
+
+func (q *Queries) ListNotificacoes(ctx context.Context, id int32) ([]byte, error) {
+	row := q.db.QueryRow(ctx, listNotificacoes, id)
+	var notificacoes []byte
+	err := row.Scan(&notificacoes)
+	return notificacoes, err
 }
 
 const listProjetos = `-- name: ListProjetos :many
@@ -1274,4 +1308,20 @@ func (q *Queries) UpdateUsuario(ctx context.Context, arg UpdateUsuarioParams) (U
 		&i.AtualizadoEm,
 	)
 	return i, err
+}
+
+const updateUsuarioNotificacoes = `-- name: UpdateUsuarioNotificacoes :exec
+UPDATE usuarios
+SET notificacoes = $1
+WHERE id = $2
+`
+
+type UpdateUsuarioNotificacoesParams struct {
+	Notificacoes []byte `json:"notificacoes"`
+	ID           int32  `json:"id"`
+}
+
+func (q *Queries) UpdateUsuarioNotificacoes(ctx context.Context, arg UpdateUsuarioNotificacoesParams) error {
+	_, err := q.db.Exec(ctx, updateUsuarioNotificacoes, arg.Notificacoes, arg.ID)
+	return err
 }

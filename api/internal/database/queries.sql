@@ -3,7 +3,7 @@ SELECT id, nome, email, senha, criado_em, atualizado_em FROM usuarios
 WHERE email = $1 limit 1;
 
 -- name: GetUsuarioById :one
-SELECT id, nome, email, senha, criado_em, atualizado_em FROM usuarios
+SELECT id, nome, email, notificacoes, senha, criado_em, atualizado_em FROM usuarios
 WHERE id = $1 limit 1;
 
 -- name: ListUsuarios :many
@@ -26,6 +26,16 @@ RETURNING id, nome, email, criado_em, atualizado_em;
 
 -- name: DeleteUsuario :exec
 DELETE FROM usuarios WHERE id = $1;
+
+-- name: UpdateUsuarioNotificacoes :exec
+UPDATE usuarios
+SET notificacoes = sqlc.arg(notificacoes)
+WHERE id = sqlc.arg(id);
+
+-- name: ListNotificacoes :one
+SELECT notificacoes
+FROM usuarios
+WHERE id = sqlc.arg(id);
 
 -- name: GetProjetoById :one
 SELECT id, nome, criado_em, deletado_em, atualizado_em FROM projetos
