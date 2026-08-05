@@ -16,7 +16,7 @@ import (
 type UsuarioService struct {
 	usuarioRepository ports.IUsuarioRepository
 	authService       *AuthService
-}
+}	
 
 func NewUsuarioService(repo ports.IUsuarioRepository, authService *AuthService) *UsuarioService {
 	return &UsuarioService{
@@ -118,8 +118,18 @@ func (s *UsuarioService) Remover(ctx context.Context, id int32) error {
 	return s.usuarioRepository.DeleteUsuario(ctx, id)
 }
 
-func (s *UsuarioService) BuscarNotificacoes(ctx context.Context, id int32) ([]byte, error) {
-	return s.usuarioRepository.ListNotificacoes(ctx, id)
+func (s *UsuarioService) BuscarNotificacoes(ctx context.Context, id int32) ([]models.UsuarioNotificacao, error) {
+	notificacoesBin, err :=s.usuarioRepository.ListNotificacoes(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("Erro ao buscar notificacoes: %w", err)
+	}
+
+	var notificacoes []models.UsuarioNotificacao
+	err = json.Unmarshal(notificacoesBin, &notificacoes)
+	if err != nil {
+		return nil, fmt.Errorf("Erro ao formatar notificacoes: %w", err)
+	}
+	return notificacoes, nil
 }
 
 func (s *UsuarioService) NotificarUsuario(ctx context.Context, notificacao models.CriarUsuarioNotificacao) error {

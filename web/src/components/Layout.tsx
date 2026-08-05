@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
+import { NotificationBell } from './NotificationBell';
 
 export function Layout() {
   const { logout } = useAuth();
@@ -46,13 +47,16 @@ export function Layout() {
           </button>
           <h1 className="text-xl font-semibold text-gray-800">Task Manager</h1>
         </div>
-        <button
-          onClick={logout}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
-        >
-          <LogOut size={18} />
-          <span className="hidden sm:inline">Sair</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+          >
+            <LogOut size={18} />
+            <span className="hidden sm:inline">Sair</span>
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-1">

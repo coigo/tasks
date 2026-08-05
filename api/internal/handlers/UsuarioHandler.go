@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"tasks/internal/middleware"
@@ -30,7 +31,7 @@ func NewUsuarioHandler(cfg UsuarioHandlerConfig) *UsuarioHandler {
 	group.GET("/:id", handler.BuscarPorId)
 	group.PUT("/:id", handler.Atualizar)
 	group.DELETE("/:id", handler.Remover)
-	group.GET("/notificacoes", handler.Remover)
+	group.GET("/notificacoes", handler.BuscarNotificacoes)
 	
 
 	return handler
@@ -124,7 +125,7 @@ func (h *UsuarioHandler) Remover(ctx *gin.Context) {
 
 func (h *UsuarioHandler) BuscarNotificacoes(ctx *gin.Context) {
 	usuarioId := middleware.GetUsuarioID(ctx)
-	
+	fmt.Println("> UID:", usuarioId)
 	notificacoes, err := h.service.BuscarNotificacoes(ctx.Request.Context(), usuarioId)
 	if  err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
