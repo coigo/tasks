@@ -1,4 +1,8 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+
+interface RetryConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 const api = axios.create({
   baseURL: 'http://localhost:8080',
@@ -32,10 +36,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as RetryConfig;
     if (!originalRequest) return Promise.reject(error);
 
-    if (error.response?.status === 401 && !originalRequest.headers?.['x-retry']) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       const refreshToken = localStorage.getItem('refresh_token');
       if (!refreshToken) {
         localStorage.removeItem('access_token');
@@ -49,7 +53,7 @@ api.interceptors.response.use(
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
-            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers = originalRequest.headers;
             originalRequest.headers.Authorization = `Bearer ${token}`;
             return api(originalRequest);
           })
@@ -57,8 +61,7 @@ api.interceptors.response.use(
       }
 
       isRefreshing = true;
-      originalRequest.headers = originalRequest.headers || {};
-      originalRequest.headers['x-retry'] = 'true';
+      originalRequest._retry = true;
 
       try {
         const response = await api.post('/auth/refresh', { refresh_token: refreshToken });
@@ -79,7 +82,6 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
-
     return Promise.reject(error);
   }
 );

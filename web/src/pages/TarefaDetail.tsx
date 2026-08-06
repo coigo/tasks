@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Plus,
   Paperclip,
+  Download,
   Trash2,
   MessageSquare,
   Save,
@@ -49,11 +50,11 @@ interface Tarefa {
 
 interface Movimentacao {
   id: number;
-  situacao_id: number;
-  situacao_descricao: string;
+  situacaoId: number;
+  situacaoDescricao: string;
   descricao: string;
-  criado_por_nome: string;
-  criado_em: string;
+  criadoPorNome: string;
+  criadoEm: string;
 }
 
 interface Anexo {
@@ -62,12 +63,12 @@ interface Anexo {
   nome: string;
   local: string;
   tamanho: number;
-  criado_em: string;
+  criadoEm: string;
 }
 
 interface Opcoes {
   usuarios: Array<{ id: number; nome: string }>;
-  situacoes: Array<{ id: number; descricao: string; encerra_tarefa: boolean }>;
+  situacoes: Array<{ id: number; descricao: string; encerraTarefa: boolean }>;
   tipos: Array<{ id: number; descricao: string }>;
   projetos: Array<{ id: number; nome: string }>;
 }
@@ -75,10 +76,10 @@ interface Opcoes {
 const schema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
   descricao: z.string(),
-  projeto_id: z.string().min(1, 'Projeto é obrigatório'),
-  responsavel_id: z.string().min(1, 'Responsável é obrigatório'),
-  situacao_id: z.string().min(1, 'Situação é obrigatória'),
-  tipo_id: z.string().min(1, 'Tipo é obrigatório'),
+  projetoId: z.string().min(1, 'Projeto é obrigatório'),
+  responsavelId: z.string().min(1, 'Responsável é obrigatório'),
+  situacaoId: z.string().min(1, 'Situação é obrigatória'),
+  tipoId: z.string().min(1, 'Tipo é obrigatório'),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -100,7 +101,7 @@ export function TarefaDetail() {
   const [arquivosTemp, setArquivosTemp] = useState<Array<{ uuid: string; nome: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [novaMovimentacao, setNovaMovimentacao] = useState({ situacao_id: '', descricao: '' });
+  const [novaMovimentacao, setNovaMovimentacao] = useState({ situacaoId: '', descricao: '' });
   const [editandoMovimentacao, setEditandoMovimentacao] = useState<Movimentacao | null>(null);
 
   const { execute: atualizar, isLoading: isSubmitting } = useMutate('/tarefas', 'put');
@@ -138,10 +139,10 @@ export function TarefaDetail() {
       reset({
         titulo: tarefaRes.data.titulo,
         descricao: tarefaRes.data.descricao || '',
-        projeto_id: String(tarefaRes.data.projeto_id),
-        responsavel_id: String(tarefaRes.data.responsavel_id),
-        situacao_id: String(tarefaRes.data.situacao_id),
-        tipo_id: String(tarefaRes.data.tipo_id),
+        projetoId: String(tarefaRes.data.projetoId),
+        responsavelId: String(tarefaRes.data.responsavelId),
+        situacaoId: String(tarefaRes.data.situacaoId),
+        tipoId: String(tarefaRes.data.tipoId),
       });
     } catch {
       toast.error('Erro ao carregar tarefa');
@@ -174,10 +175,10 @@ export function TarefaDetail() {
       const payload = {
         titulo: data.titulo,
         descricao: data.descricao,
-        projeto_id: Number(data.projeto_id),
-        responsavel_id: Number(data.responsavel_id),
-        situacao_id: Number(data.situacao_id),
-        tipo_id: Number(data.tipo_id),
+        projetoId: Number(data.projetoId),
+        responsavelId: Number(data.responsavelId),
+        situacaoId: Number(data.situacaoId),
+        tipoId: Number(data.tipoId),
       };
       await atualizar(payload, `/tarefas/${tarefaId}`);
       toast.success('Tarefa atualizada');
@@ -193,10 +194,10 @@ export function TarefaDetail() {
       reset({
         titulo: tarefa.titulo,
         descricao: tarefa.descricao || '',
-        projeto_id: String(tarefa.projetoId),
-        responsavel_id: String(tarefa.responsavelId),
-        situacao_id: String(tarefa.situacaoId),
-        tipo_id: String(tarefa.tipoId),
+        projetoId: String(tarefa.projetoId),
+        responsavelId: String(tarefa.responsavelId),
+        situacaoId: String(tarefa.situacaoId),
+        tipoId: String(tarefa.tipoId),
       });
     }
     setIsEditing(false);
@@ -263,25 +264,25 @@ export function TarefaDetail() {
   };
 
   const handleAdicionarMovimentacao = async () => {
-    if (!novaMovimentacao.descricao && !novaMovimentacao.situacao_id) {
+    if (!novaMovimentacao.descricao && !novaMovimentacao.situacaoId) {
       toast.error('Informe uma situação ou uma descrição');
       return;
     }
     try {
-      const payload: { situacao_id?: number; descricao: string } = {
+      const payload: { situacaoId?: number; descricao: string } = {
         descricao: novaMovimentacao.descricao,
       };
-      if (novaMovimentacao.situacao_id) {
-        payload.situacao_id = Number(novaMovimentacao.situacao_id);
+      if (novaMovimentacao.situacaoId) {
+        payload.situacaoId = Number(novaMovimentacao.situacaoId);
       }
       await criarMovimentacao(payload, `/tarefas/${tarefaId}/movimentacoes`);
-      setNovaMovimentacao({ situacao_id: '', descricao: '' });
+      setNovaMovimentacao({ situacaoId: '', descricao: '' });
       const response = await api.get(`/tarefas/${tarefaId}/movimentacoes`);
       setMovimentacoes(response.data);
       const tarefaResponse = await api.get(`/tarefas/${tarefaId}`);
       setTarefa(tarefaResponse.data);
-      if (novaMovimentacao.situacao_id) {
-        setValue('situacao_id', novaMovimentacao.situacao_id);
+      if (novaMovimentacao.situacaoId) {
+        setValue('situacaoId', novaMovimentacao.situacaoId);
       }
       toast.success('Movimentação registrada');
     } catch {
@@ -512,9 +513,9 @@ export function TarefaDetail() {
                 <FormSelect
                   label="Alterar situação (opcional)"
                   options={opcoes.situacoes.map((s) => ({ value: s.id, label: s.descricao }))}
-                  value={novaMovimentacao.situacao_id}
+                  value={novaMovimentacao.situacaoId}
                   onChange={(e) =>
-                    setNovaMovimentacao({ ...novaMovimentacao, situacao_id: e.target.value })
+                    setNovaMovimentacao({ ...novaMovimentacao, situacaoId: e.target.value })
                   }
                 />
                 <div className="md:col-span-2">
@@ -554,14 +555,14 @@ export function TarefaDetail() {
                         <div className="flex items-center gap-2">
                           <MessageSquare size={16} className="text-primary" />
                           <span className="font-medium text-gray-900">
-                            {movimentacao.situacao_descricao}
+                            {movimentacao.situacaoDescricao}
                           </span>
                           <span className="text-sm text-gray-500">
-                            por {movimentacao.criado_por_nome}
+                            por {movimentacao.criadoPorNome}
                           </span>
                         </div>
                         <span className="text-sm text-gray-400">
-                          {format(new Date(movimentacao.criado_em), 'dd/MM/yyyy HH:mm', {
+                          {format(new Date(movimentacao.criadoEm), 'dd/MM/yyyy HH:mm', {
                             locale: ptBR,
                           })}
                         </span>

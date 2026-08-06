@@ -35,7 +35,7 @@ func NewTarefaMovimentacaoHandler(cfg TarefaMovimentacaoHandlerConfig) *TarefaMo
 }
 
 type CriarTarefaMovimentacaoRequest struct {
-	SituacaoID *int32 `json:"situacao_id"`
+	SituacaoID *int32 `json:"situacaoId"`
 	Descricao  string `json:"descricao"`
 }
 

@@ -31,7 +31,7 @@ func main() {
 
 	router := gin.Default()
 	router.Use(corsMiddleware())
-
+	
 	containerConfig := container.ContainerConfig{
 		Pool:   pool,
 		Router: router,
@@ -53,7 +53,7 @@ func main() {
 
 func corsMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization")
 
