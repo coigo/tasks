@@ -39,6 +39,7 @@ func NewTarefaHandler(cfg TarefaHandlerConfig) *TarefaHandler {
 	group.POST("", handler.Criar)
 	group.GET("/:id", handler.BuscarPorId)
 	group.PUT("/:id", handler.Atualizar)
+	group.PUT("/:id/mover", handler.Mover)
 	group.DELETE("/:id", handler.Remover)
 
 	return handler
@@ -61,6 +62,10 @@ type AtualizarTarefaRequest struct {
 	ResponsavelID int32  `json:"responsavel_id" binding:"required"`
 	SituacaoID    int32  `json:"situacao_id" binding:"required"`
 	TipoID        int32  `json:"tipo_id" binding:"required"`
+}
+
+type MoverTarefaRequest struct {
+	SituacaoID int32 `json:"situacao_id" binding:"required"`
 }
 
 func (h *TarefaHandler) Listar(ctx *gin.Context) {
@@ -158,6 +163,26 @@ func (h *TarefaHandler) Remover(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "tarefa removida"})
+}
+
+func (h *TarefaHandler) Mover(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "id invalido"})
+		return
+	}
+
+	var req MoverTarefaRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "situacao_id é obrigatório"})
+		return
+	}
+
+	if err := h.service.Mover(ctx.Request.Context(), int32(id), req.SituacaoID); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "tarefa movida"})
 }
 
 func parseQueryInt(ctx *gin.Context, key string) int32 {

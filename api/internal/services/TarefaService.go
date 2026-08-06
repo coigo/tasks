@@ -104,6 +104,16 @@ func (s *TarefaService) Remover(ctx context.Context, id int32) error {
 	return s.tarefaRepository.DeleteTarefa(ctx, id)
 }
 
+func (s *TarefaService) Mover(ctx context.Context, tarefaID, novaSituacaoID int32) error {
+	if err := s.tarefaRepository.UpdateSituacaoTarefa(ctx, repository.UpdateSituacaoTarefaParams{
+		ID:         tarefaID,
+		SituacaoID: novaSituacaoID,
+	}); err != nil {
+		return fmt.Errorf("erro ao mover tarefa: %w", err)
+	}
+	return nil
+}
+
 func (s *TarefaService) Metricas(ctx context.Context) (map[string]interface{}, error) {
 	porSituacao, err := s.tarefaRepository.CountTarefasBySituacao(ctx)
 	if err != nil {

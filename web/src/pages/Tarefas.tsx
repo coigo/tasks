@@ -4,22 +4,11 @@ import api from '../services/api';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { FormSelect } from '../components/FormSelect';
-import { Plus, Search, Filter } from 'lucide-react';
-import { CORES_SITUACAO } from '../constants/coresSituacao';
-
-interface Tarefa {
-  id: number;
-  numero: number;
-  ano: number;
-  titulo: string;
-  situacaoDescricao: string;
-  situacaoEncerraTarefa: boolean;
-  situacaoCor: string;
-  tipoDescricao: string;
-  responsavelNome: string;
-  projetoNome: string;
-  ultimaMovEm: string;
-}
+import { Plus, Search, Filter, LayoutList, LayoutGrid } from 'lucide-react';
+import { TarefaList } from '../components/TarefaList';
+import { KanbanBoard } from '../components/KanbanBoard';
+import type { KanbanTarefa } from '../components/KanbanCard';
+import type { Situacao } from '../components/KanbanColumn';
 
 interface Filtro {
   responsavelId: string;
@@ -31,8 +20,9 @@ interface Filtro {
 }
 
 export function Tarefas() {
-  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
+  const [tarefas, setTarefas] = useState<KanbanTarefa[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const [filtros, setFiltros] = useState<Filtro>({
     responsavelId: '',
     situacaoId: '',
@@ -43,7 +33,7 @@ export function Tarefas() {
   });
   const [opcoes, setOpcoes] = useState({
     usuarios: [] as Array<{ id: number; nome: string }>,
-    situacoes: [] as Array<{ id: number; descricao: string }>,
+    situacoes: [] as Situacao[],
     tipos: [] as Array<{ id: number; descricao: string }>,
     projetos: [] as Array<{ id: number; nome: string }>,
   });
@@ -58,7 +48,12 @@ export function Tarefas() {
       ]);
       setOpcoes({
         usuarios: usuariosRes.data,
-        situacoes: situacoesRes.data,
+        situacoes: situacoesRes.data.map((s: { id: number; descricao: string; encerra_tarefa: boolean; cor: string }) => ({
+          id: s.id,
+          descricao: s.descricao,
+          cor: s.cor || 'gray',
+          encerra_tarefa: s.encerra_tarefa,
+        })),
         tipos: tiposRes.data,
         projetos: projetosRes.data,
       });
@@ -66,26 +61,55 @@ export function Tarefas() {
     carregarOpcoes();
   }, []);
 
-  useEffect(() => {
-    const carregarTarefas = async () => {
-      setIsLoading(false);
-      try {
-        const params = new URLSearchParams();
-        if (filtros.responsavelId) params.append('responsavel_id', filtros.responsavelId);
-        if (filtros.situacaoId) params.append('situacao_id', filtros.situacaoId);
-        if (filtros.tipoId) params.append('tipo_id', filtros.tipoId);
-        if (filtros.projetoId) params.append('projeto_id', filtros.projetoId);
-        if (filtros.busca) params.append('busca', filtros.busca);
-        if (filtros.incluirEncerradas) params.append('incluir_encerradas', 'true');
+  const carregarTarefas = async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filtros.responsavelId) params.append('responsavel_id', filtros.responsavelId);
+      if (filtros.situacaoId) params.append('situacao_id', filtros.situacaoId);
+      if (filtros.tipoId) params.append('tipo_id', filtros.tipoId);
+      if (filtros.projetoId) params.append('projeto_id', filtros.projetoId);
+      if (filtros.busca) params.append('busca', filtros.busca);
+      if (filtros.incluirEncerradas) params.append('incluir_encerradas', 'true');
 
-        const response = await api.get(`/tarefas?${params.toString()}`);
-        setTarefas(response.data);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      const response = await api.get(`/tarefas?${params.toString()}`);
+      const tarefasData = response.data.map((t: {
+        id: number;
+        numero: number;
+        ano: number;
+        titulo: string;
+        situacaoId: number;
+        situacaoDescricao: string;
+        situacaoCor: string;
+        situacaoEncerraTarefa: boolean;
+        tipoDescricao: string;
+        responsavelNome: string;
+        projetoNome: string;
+      }) => ({
+        id: t.id,
+        numero: t.numero,
+        ano: t.ano,
+        titulo: t.titulo,
+        situacaoId: t.situacaoId,
+        situacaoDescricao: t.situacaoDescricao,
+        situacaoCor: t.situacaoCor || 'gray',
+        tipoDescricao: t.tipoDescricao,
+        responsavelNome: t.responsavelNome,
+        projetoNome: t.projetoNome,
+      }));
+      setTarefas(tarefasData);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     carregarTarefas();
   }, [filtros]);
+
+  const situacoesFiltradas = filtros.situacaoId
+    ? opcoes.situacoes.filter((s) => s.id === Number(filtros.situacaoId))
+    : opcoes.situacoes;
 
   return (
     <div className="space-y-6">
@@ -94,12 +118,38 @@ export function Tarefas() {
           <h1 className="text-2xl font-bold text-gray-900">Tarefas</h1>
           <p className="text-gray-500">Gerencie todas as tarefas</p>
         </div>
-        <Link to="/tarefas/nova">
-          <Button>
-            <Plus size={18} />
-            Nova tarefa
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-2 flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-primary text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <LayoutList size={16} />
+              Lista
+            </button>
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`px-3 py-2 flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                viewMode === 'kanban'
+                  ? 'bg-primary text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <LayoutGrid size={16} />
+              Kanban
+            </button>
+          </div>
+          <Link to="/tarefas/nova">
+            <Button>
+              <Plus size={18} />
+              Nova tarefa
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Card title="Filtros">
@@ -154,41 +204,17 @@ export function Tarefas() {
         </label>
       </Card>
 
-      <Card title="Lista de tarefas">
-        {isLoading ? (
-          <p className="text-gray-500 text-center py-8">Carregando...</p>
-        ) : tarefas.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">Nenhuma tarefa encontrada.</p>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {tarefas.map((tarefa) => (
-              <Link
-                key={tarefa.id}
-                to={`/tarefas/${tarefa.id}`}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 -mx-5 px-5 hover:bg-gray-50 transition-colors"
-              >
-                <div>
-                  <p className="font-medium text-gray-900">
-                    #{tarefa.numero}/{tarefa.ano} {tarefa.titulo}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {tarefa.projetoNome} • {tarefa.tipoDescricao} • Responsável: {tarefa.responsavelNome}
-                  </p>
-                </div>
-                <span
-                  className="self-start px-3 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: `${CORES_SITUACAO[tarefa.situacaoCor]?.bg || '#6B7280'}20`,
-                    color: CORES_SITUACAO[tarefa.situacaoCor]?.text || '#374151',
-                  }}
-                >
-                  {tarefa.situacaoDescricao}
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </Card>
+      {viewMode === 'list' ? (
+        <Card title="Lista de tarefas">
+          <TarefaList tarefas={tarefas} isLoading={isLoading} />
+        </Card>
+      ) : (
+        <KanbanBoard
+          tarefas={tarefas}
+          situacoes={situacoesFiltradas}
+          onTarefaMoved={carregarTarefas}
+        />
+      )}
     </div>
   );
 }
