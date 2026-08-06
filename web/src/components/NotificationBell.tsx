@@ -3,14 +3,15 @@ import { Link } from 'react-router-dom';
 import { Bell, Check } from 'lucide-react';
 import { parse, format } from 'date-fns';
 import { useNotifications } from '../context/NotificationContext';
-import api from '../services/api';
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const { notifications, unreadCount, isLoading, lerNotificacao } = useNotifications();
 
-   const onClickNotificacao = async (notificacaoId: number) => {
-      lerNotificacao(notificacaoId)      
+   const onClickNotificacao = async (notificacaoId: number, lido: boolean) => {
+      if (lido) {
+         lerNotificacao(notificacaoId)      
+      } 
       setIsOpen(false)
    }
    
@@ -58,7 +59,7 @@ export function NotificationBell() {
                     <li key={index}>
                       <Link
                         to={notification.redirecionarPara || '#'}
-                        onClick={() => onClickNotificacao(notification.id)}
+                        onClick={() => onClickNotificacao(notification.id, notification.lido)}
                         className={`flex items-start gap-3 p-3 hover:bg-gray-50 transition-colors ${
                           !notification.lido ? 'bg-blue-50/50' : ''
                         }`}
