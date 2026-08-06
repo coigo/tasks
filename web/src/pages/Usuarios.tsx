@@ -94,9 +94,9 @@ export function Usuarios() {
             {...register('nome')}
           />
           <FormInput
-            label="E-mail"
+            label="Nome de Usuário"
             type="usuario"
-            placeholder="usuario@tasks.local"
+            placeholder="joaozinho"
             error={errors.usuario?.message}
             {...register('usuario')}
           />

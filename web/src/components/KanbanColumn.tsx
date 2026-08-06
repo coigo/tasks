@@ -16,8 +16,10 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ situacao, tarefas }: KanbanColumnProps) {
+  const columnDroppableId = `column-${situacao.id}`;
+
   const { setNodeRef, isOver } = useDroppable({
-    id: situacao.id,
+    id: columnDroppableId,
   });
 
   const bgColor = CORES_SITUACAO[situacao.cor]?.bg || '#6B7280';
@@ -46,7 +48,7 @@ export function KanbanColumn({ situacao, tarefas }: KanbanColumnProps) {
         <div
           ref={setNodeRef}
           className={`p-2 space-y-2 min-h-[200px] transition-colors ${
-            isOver ? 'bg-primary/5' : ''
+            isOver ? 'bg-primary/10 border-2 border-dashed border-blue-300' : ''
           }`}
         >
           <SortableContext items={tarefas.map((t) => t.id)} strategy={verticalListSortingStrategy}>
@@ -57,7 +59,7 @@ export function KanbanColumn({ situacao, tarefas }: KanbanColumnProps) {
 
           {tarefas.length === 0 && (
             <div className="flex items-center justify-center h-24 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-lg">
-              Arraste tarefas aqui
+              Arraste aqui
             </div>
           )}
         </div>

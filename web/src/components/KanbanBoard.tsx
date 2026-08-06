@@ -17,7 +17,7 @@ export function KanbanBoard({ tarefas, situacoes, onTarefaMoved }: KanbanBoardPr
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 20,
       },
     })
   );
@@ -40,12 +40,22 @@ export function KanbanBoard({ tarefas, situacoes, onTarefaMoved }: KanbanBoardPr
     if (!over) return;
 
     const tarefaId = active.id as number;
-    const novaSituacaoId = over.id as number;
-
     const tarefa = tarefas.find((t) => t.id === tarefaId);
     if (!tarefa) return;
 
-    if (tarefa.situacaoId === novaSituacaoId) return;
+    let novaSituacaoId: number | null = null;
+    const overId = String(over.id);
+
+    if (overId.startsWith('column-')) {
+      novaSituacaoId = parseInt(overId.replace('column-', ''), 10);
+    } else {
+      const tarefaSobre = tarefas.find((t) => t.id === over.id);
+      if (tarefaSobre) {
+        novaSituacaoId = tarefaSobre.situacaoId;
+      }
+    }
+
+    if (!novaSituacaoId || tarefa.situacaoId === novaSituacaoId) return;
 
     try {
       await api.put(`/tarefas/${tarefaId}/mover`, {
@@ -76,7 +86,7 @@ export function KanbanBoard({ tarefas, situacoes, onTarefaMoved }: KanbanBoardPr
 
       <DragOverlay>
         {activeTarefa ? (
-          <div className="bg-white border border-primary rounded-lg p-3 shadow-lg opacity-90">
+          <div className="bg-white border-2 border-primary rounded-lg p-3 shadow-xl cursor-grabbing">
             <p className="font-medium text-gray-900 text-sm">
               #{activeTarefa.numero}/{activeTarefa.ano} {activeTarefa.titulo}
             </p>
