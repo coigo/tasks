@@ -37,11 +37,13 @@ func NewTarefaSituacaoHandler(cfg TarefaSituacaoHandlerConfig) *TarefaSituacaoHa
 type CriarTarefaSituacaoRequest struct {
 	Descricao     string `json:"descricao" binding:"required"`
 	EncerraTarefa bool   `json:"encerra_tarefa"`
+	Cor           string `json:"cor"`
 }
 
 type AtualizarTarefaSituacaoRequest struct {
 	Descricao     string `json:"descricao" binding:"required"`
 	EncerraTarefa bool   `json:"encerra_tarefa"`
+	Cor           string `json:"cor"`
 }
 
 func (h *TarefaSituacaoHandler) Listar(ctx *gin.Context) {
@@ -75,7 +77,7 @@ func (h *TarefaSituacaoHandler) Criar(ctx *gin.Context) {
 		return
 	}
 
-	situacao, err := h.service.Criar(ctx.Request.Context(), req.Descricao, req.EncerraTarefa)
+	situacao, err := h.service.Criar(ctx.Request.Context(), req.Descricao, req.EncerraTarefa, req.Cor)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -96,7 +98,7 @@ func (h *TarefaSituacaoHandler) Atualizar(ctx *gin.Context) {
 		return
 	}
 
-	situacao, err := h.service.Atualizar(ctx.Request.Context(), int32(id), req.Descricao, req.EncerraTarefa)
+	situacao, err := h.service.Atualizar(ctx.Request.Context(), int32(id), req.Descricao, req.EncerraTarefa, req.Cor)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return

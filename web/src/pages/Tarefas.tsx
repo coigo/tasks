@@ -5,6 +5,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { FormSelect } from '../components/FormSelect';
 import { Plus, Search, Filter } from 'lucide-react';
+import { CORES_SITUACAO } from '../constants/coresSituacao';
 
 interface Tarefa {
   id: number;
@@ -13,6 +14,7 @@ interface Tarefa {
   titulo: string;
   situacaoDescricao: string;
   situacaoEncerraTarefa: boolean;
+  situacaoCor: string;
   tipoDescricao: string;
   responsavelNome: string;
   projetoNome: string;
@@ -174,11 +176,11 @@ export function Tarefas() {
                   </p>
                 </div>
                 <span
-                  className={`self-start px-3 py-1 rounded-full text-xs font-medium ${
-                    tarefa.situacaoEncerraTarefa
-                      ? 'bg-success/10 text-success'
-                      : 'bg-warning/10 text-warning'
-                  }`}
+                  className="self-start px-3 py-1 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: `${CORES_SITUACAO[tarefa.situacaoCor]?.bg || '#6B7280'}20`,
+                    color: CORES_SITUACAO[tarefa.situacaoCor]?.text || '#374151',
+                  }}
                 >
                   {tarefa.situacaoDescricao}
                 </span>

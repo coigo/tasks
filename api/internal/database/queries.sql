@@ -65,25 +65,26 @@ SET deletado_em = CURRENT_TIMESTAMP,
 WHERE id = $1;
 
 -- name: GetTarefaSituacaoById :one
-SELECT id, descricao, encerra_tarefa, criado_em, atualizado_em FROM tarefas_situacoes
+SELECT id, descricao, encerra_tarefa, cor, criado_em, atualizado_em FROM tarefas_situacoes
 WHERE id = $1 limit 1;
 
 -- name: ListTarefaSituacoes :many
-SELECT id, descricao, encerra_tarefa, criado_em, atualizado_em FROM tarefas_situacoes
+SELECT id, descricao, encerra_tarefa, cor, criado_em, atualizado_em FROM tarefas_situacoes
 ORDER BY descricao;
 
 -- name: CreateTarefaSituacao :one
-INSERT INTO tarefas_situacoes (descricao, encerra_tarefa)
-VALUES ($1, $2)
-RETURNING id, descricao, encerra_tarefa, criado_em, atualizado_em;
+INSERT INTO tarefas_situacoes (descricao, encerra_tarefa, cor)
+VALUES ($1, $2, $3)
+RETURNING id, descricao, encerra_tarefa, cor, criado_em, atualizado_em;
 
 -- name: UpdateTarefaSituacao :one
 UPDATE tarefas_situacoes
 SET descricao = $2,
     encerra_tarefa = $3,
+    cor = $4,
     atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, descricao, encerra_tarefa, criado_em, atualizado_em;
+RETURNING id, descricao, encerra_tarefa, cor, criado_em, atualizado_em;
 
 -- name: DeleteTarefaSituacao :exec
 DELETE FROM tarefas_situacoes WHERE id = $1;
@@ -131,6 +132,7 @@ SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        u_resp.nome AS responsavel_nome,
        s.descricao AS situacao_descricao,
        s.encerra_tarefa AS situacao_encerra_tarefa,
+       s.cor AS situacao_cor,
        tp.descricao AS tipo_descricao
 FROM tarefas t
 JOIN projetos p ON p.id = t.projeto_id
@@ -149,6 +151,7 @@ SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        u_resp.nome AS responsavel_nome,
        s.descricao AS situacao_descricao,
        s.encerra_tarefa AS situacao_encerra_tarefa,
+       s.cor AS situacao_cor,
        tp.descricao AS tipo_descricao
 FROM tarefas t
 JOIN projetos p ON p.id = t.projeto_id
@@ -188,10 +191,10 @@ WHERE id = $1;
 DELETE FROM tarefas WHERE id = $1;
 
 -- name: CountTarefasBySituacao :many
-SELECT s.id, s.descricao, s.encerra_tarefa, COUNT(t.id) AS total
+SELECT s.id, s.descricao, s.encerra_tarefa, s.cor, COUNT(t.id) AS total
 FROM tarefas_situacoes s
 LEFT JOIN tarefas t ON t.situacao_id = s.id
-GROUP BY s.id, s.descricao, s.encerra_tarefa
+GROUP BY s.id, s.descricao, s.encerra_tarefa, s.cor
 ORDER BY s.descricao;
 
 -- name: CountTarefasByTipo :many
@@ -263,6 +266,7 @@ SELECT DISTINCT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        u_resp.nome AS responsavel_nome,
        s.descricao AS situacao_descricao,
        s.encerra_tarefa AS situacao_encerra_tarefa,
+       s.cor AS situacao_cor,
        tp.descricao AS tipo_descricao
 FROM tarefas t
 JOIN projetos p ON p.id = t.projeto_id

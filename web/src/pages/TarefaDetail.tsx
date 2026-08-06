@@ -27,6 +27,7 @@ import {
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { CORES_SITUACAO } from '../constants/coresSituacao';
 
 interface Tarefa {
   id: number;
@@ -41,6 +42,7 @@ interface Tarefa {
   criadoPorNome: string;
   responsavelNome: string;
   situacaoDescricao: string;
+  situacaoCor: string;
   tipoDescricao: string;
   projetoNome: string;
   situacaoEncerraTarefa: boolean;
@@ -403,7 +405,13 @@ export function TarefaDetail() {
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Situação</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{tarefa?.situacaoDescricao}</dd>
+                  <dd className="mt-1 flex items-center gap-2">
+                    <span
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: CORES_SITUACAO[tarefa?.situacaoCor || 'gray']?.bg || '#6B7280' }}
+                    />
+                    <span className="text-sm text-gray-900">{tarefa?.situacaoDescricao}</span>
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Tipo</dt>

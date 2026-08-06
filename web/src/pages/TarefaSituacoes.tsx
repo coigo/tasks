@@ -8,16 +8,19 @@ import { FormInput } from '../components/FormInput';
 import { useApiData, useMutate } from '../hooks/useApi';
 import { Pencil, Trash2, Plus, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { CORES_SITUACAO, OPCOES_CORES } from '../constants/coresSituacao';
 
 interface Situacao {
   id: number;
   descricao: string;
   encerra_tarefa: boolean;
+  cor: string;
 }
 
 const schema = z.object({
   descricao: z.string().min(1, 'Descrição é obrigatória'),
   encerra_tarefa: z.boolean(),
+  cor: z.string(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -63,6 +66,7 @@ export function TarefaSituacoes() {
     setEditando(situacao);
     setValue('descricao', situacao.descricao);
     setValue('encerra_tarefa', situacao.encerra_tarefa);
+    setValue('cor', situacao.cor || 'gray');
   };
 
   const handleRemover = async (id: number) => {
@@ -99,6 +103,23 @@ export function TarefaSituacoes() {
             />
             Encerra tarefa (não aparece na lista de pendentes)
           </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Cor</label>
+            <div className="flex gap-2 flex-wrap">
+              {OPCOES_CORES.map((opcao) => (
+                <button
+                  key={opcao.value}
+                  type="button"
+                  onClick={() => setValue('cor', opcao.value)}
+                  className={`w-8 h-8 rounded-full border-2 transition-all ${
+                    opcao.value === 'gray' ? 'border-gray-400' : 'border-transparent'
+                  }`}
+                  style={{ backgroundColor: opcao.bg }}
+                  title={opcao.label}
+                />
+              ))}
+            </div>
+          </div>
           <div className="flex gap-2">
             <Button type="submit" isLoading={isSubmitting}>
               <Plus size={18} />
@@ -133,6 +154,10 @@ export function TarefaSituacoes() {
                 className="flex items-center justify-between py-4 -mx-5 px-5 hover:bg-gray-50"
               >
                 <div className="flex items-center gap-3">
+                  <span
+                    className="w-4 h-4 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: CORES_SITUACAO[situacao.cor]?.bg || '#6B7280' }}
+                  />
                   <span className="font-medium text-gray-900">{situacao.descricao}</span>
                   {situacao.encerra_tarefa && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-success/10 text-success text-xs rounded-full">

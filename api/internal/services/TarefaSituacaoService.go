@@ -17,13 +17,17 @@ func NewTarefaSituacaoService(repo ports.ITarefaSituacaoRepository) *TarefaSitua
 	return &TarefaSituacaoService{repository: repo}
 }
 
-func (s *TarefaSituacaoService) Criar(ctx context.Context, descricao string, encerraTarefa bool) (*repository.TarefasSituaco, error) {
+func (s *TarefaSituacaoService) Criar(ctx context.Context, descricao string, encerraTarefa bool, cor string) (*repository.TarefasSituaco, error) {
 	if descricao == "" {
 		return nil, fmt.Errorf("descricao e obrigatoria")
+	}
+	if cor == "" {
+		cor = "gray"
 	}
 	situacao, err := s.repository.CreateTarefaSituacao(ctx, repository.CreateTarefaSituacaoParams{
 		Descricao:     descricao,
 		EncerraTarefa: pgtype.Bool{Bool: encerraTarefa, Valid: true},
+		Cor:           cor,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar situacao: %w", err)
@@ -43,7 +47,7 @@ func (s *TarefaSituacaoService) Listar(ctx context.Context) ([]repository.Tarefa
 	return s.repository.ListTarefaSituacoes(ctx)
 }
 
-func (s *TarefaSituacaoService) Atualizar(ctx context.Context, id int32, descricao string, encerraTarefa bool) (*repository.TarefasSituaco, error) {
+func (s *TarefaSituacaoService) Atualizar(ctx context.Context, id int32, descricao string, encerraTarefa bool, cor string) (*repository.TarefasSituaco, error) {
 	if descricao == "" {
 		return nil, fmt.Errorf("descricao e obrigatoria")
 	}
@@ -51,6 +55,7 @@ func (s *TarefaSituacaoService) Atualizar(ctx context.Context, id int32, descric
 		ID:            id,
 		Descricao:     descricao,
 		EncerraTarefa: pgtype.Bool{Bool: encerraTarefa, Valid: true},
+		Cor:           cor,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao atualizar situacao: %w", err)

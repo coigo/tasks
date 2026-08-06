@@ -14,11 +14,11 @@ interface Tarefa {
   numero: number;
   ano: number;
   titulo: string;
-  responsavel_nome: string;
-  situacao_descricao: string;
-  tipo_descricao: string;
-  projeto_nome: string;
-  ultima_mov_em: string;
+  responsavelNome: string;
+  situacaoDescricao: string;
+  tipoDescricao: string;
+  projetoNome: string;
+  ultimaMovEm: string;
 }
 
 interface Usuario {
@@ -109,11 +109,11 @@ export function Relatorios() {
                   #{tarefa.numero}/{tarefa.ano} {tarefa.titulo}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {tarefa.projeto_nome} • {tarefa.tipo_descricao} • {tarefa.situacao_descricao}
+                  {tarefa.projetoNome} • {tarefa.tipoDescricao} • {tarefa.situacaoDescricao}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Responsável: {tarefa.responsavel_nome} • Última movimentação:{' '}
-                  {format(new Date(tarefa.ultima_mov_em), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  Responsável: {tarefa.responsavelNome} • Última movimentação:{' '}
+                  {format(new Date(tarefa.ultimaMovEm), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                 </p>
               </div>
             ))}

@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Card } from '../components/Card';
 import { Link } from 'react-router-dom';
-import { ClipboardList, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { ClipboardList, CheckCircle2, Clock } from 'lucide-react';
+import { CORES_SITUACAO } from '../constants/coresSituacao';
 
 interface Metricas {
-  por_situacao: Array<{ id: number; descricao: string; encerra_tarefa: boolean; total: number }>;
+  por_situacao: Array<{ id: number; descricao: string; encerra_tarefa: boolean; cor: string; total: number }>;
   por_tipo: Array<{ id: number; descricao: string; total: number }>;
   por_responsavel: Array<{ id: number; nome: string; total: number }>;
 }
@@ -17,6 +18,7 @@ interface Tarefa {
   titulo: string;
   situacaoDescricao: string;
   situacaoEncerraTarefa: boolean;
+  situacaoCor: string;
   tipoDescricao: string;
   responsavelNome: string;
   projetoNome: string;
@@ -115,11 +117,10 @@ export function Home() {
             {metricas?.por_situacao.map((situacao) => (
               <div key={situacao.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {situacao.encerra_tarefa ? (
-                    <CheckCircle2 size={16} className="text-success" />
-                  ) : (
-                    <AlertCircle size={16} className="text-warning" />
-                  )}
+                  <span
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: CORES_SITUACAO[situacao.cor]?.bg || '#6B7280' }}
+                  />
                   <span className="text-gray-700">{situacao.descricao}</span>
                 </div>
                 <span className="font-semibold text-gray-900">{situacao.total}</span>
