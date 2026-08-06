@@ -71,7 +71,7 @@ type TarefasTipo struct {
 type Usuario struct {
 	ID           int32            `json:"id"`
 	Nome         string           `json:"nome"`
-	Email        string           `json:"email"`
+	Usuario      string           `json:"usuario"`
 	Senha        string           `json:"senha"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`

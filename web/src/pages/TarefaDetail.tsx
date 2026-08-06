@@ -14,7 +14,6 @@ import {
   ArrowLeft,
   Plus,
   Paperclip,
-  Download,
   Trash2,
   MessageSquare,
   Save,

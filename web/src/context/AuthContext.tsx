@@ -4,12 +4,12 @@ import api from '../services/api';
 interface Usuario {
   id: number;
   nome: string;
-  email: string;
+  usuario: string;
 }
 
 interface AuthContextData {
   usuario: Usuario | null;
-  login: (email: string, senha: string) => Promise<void>;
+  login: (usuario: string, senha: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -30,13 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, senha: string) => {
-    const response = await api.post('/auth/login', { email, senha });
-    const { tokens, usuario } = response.data;
+  const login = async (usuario: string, senha: string) => {
+    const response = await api.post('/auth/login', { usuario, senha });
+    const { tokens, usuario: usuarioReg } = response.data;
     localStorage.setItem('access_token', tokens.access_token);
     localStorage.setItem('refresh_token', tokens.refresh_token);
     api.defaults.headers.common.Authorization = `Bearer ${tokens.access_token}`;
-    setUsuario(usuario);
+    setUsuario(usuarioReg);
   };
 
   const logout = () => {

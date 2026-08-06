@@ -23,7 +23,7 @@ type Config struct {
 
 	JWTSecret string
 
-	AdminEmail    string
+	AdminUsuario    string
 	AdminPassword string
 
 	AppPort string
@@ -47,7 +47,7 @@ func Load() Config {
 
 		JWTSecret: os.Getenv("JWT_SECRET"),
 
-		AdminEmail:    os.Getenv("ADMIN_EMAIL"),
+		AdminUsuario:  os.Getenv("ADMIN_USUARIO"),
 		AdminPassword: os.Getenv("ADMIN_PASSWORD"),
 
 		AppPort: os.Getenv("APP_PORT"),

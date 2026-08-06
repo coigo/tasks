@@ -12,12 +12,12 @@ import toast from 'react-hot-toast';
 interface Usuario {
   id: number;
   nome: string;
-  email: string;
+  usuario: string;
 }
 
 const schema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório'),
-  email: z.string().email('E-mail inválido'),
+  usuario: z.string(),
   senha: z.string().min(4, 'Senha deve ter no mínimo 4 caracteres').optional(),
 });
 
@@ -63,7 +63,7 @@ export function Usuarios() {
   const handleEditar = (usuario: Usuario) => {
     setEditando(usuario);
     setValue('nome', usuario.nome);
-    setValue('email', usuario.email);
+    setValue('usuario', usuario.usuario);
     setValue('senha', '');
   };
 
@@ -95,10 +95,10 @@ export function Usuarios() {
           />
           <FormInput
             label="E-mail"
-            type="email"
-            placeholder="email@tasks.local"
-            error={errors.email?.message}
-            {...register('email')}
+            type="usuario"
+            placeholder="usuario@tasks.local"
+            error={errors.usuario?.message}
+            {...register('usuario')}
           />
           <FormInput
             label={editando ? 'Senha (deixe em branco para manter)' : 'Senha'}
@@ -142,7 +142,7 @@ export function Usuarios() {
               >
                 <div>
                   <p className="font-medium text-gray-900">{usuario.nome}</p>
-                  <p className="text-sm text-gray-500">{usuario.email}</p>
+                  <p className="text-sm text-gray-500">{usuario.usuario}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button

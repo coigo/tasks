@@ -318,32 +318,32 @@ func (q *Queries) CreateTarefaTipo(ctx context.Context, descricao string) (Taref
 }
 
 const createUsuario = `-- name: CreateUsuario :one
-INSERT INTO usuarios (nome, email, senha)
+INSERT INTO usuarios (nome, usuario, senha)
 VALUES ($1, $2, $3)
-RETURNING id, nome, email, criado_em, atualizado_em
+RETURNING id, nome, usuario, criado_em, atualizado_em
 `
 
 type CreateUsuarioParams struct {
 	Nome  string `json:"nome"`
-	Email string `json:"email"`
+	Usuario string `json:"usuario"`
 	Senha string `json:"senha"`
 }
 
 type CreateUsuarioRow struct {
 	ID           int32            `json:"id"`
 	Nome         string           `json:"nome"`
-	Email        string           `json:"email"`
+	Usuario        string           `json:"usuario"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
 }
 
 func (q *Queries) CreateUsuario(ctx context.Context, arg CreateUsuarioParams) (CreateUsuarioRow, error) {
-	row := q.db.QueryRow(ctx, createUsuario, arg.Nome, arg.Email, arg.Senha)
+	row := q.db.QueryRow(ctx, createUsuario, arg.Nome, arg.Usuario, arg.Senha)
 	var i CreateUsuarioRow
 	err := row.Scan(
 		&i.ID,
 		&i.Nome,
-		&i.Email,
+		&i.Usuario,
 		&i.CriadoEm,
 		&i.AtualizadoEm,
 	)
@@ -589,27 +589,27 @@ func (q *Queries) GetTarefaTipoById(ctx context.Context, id int32) (TarefasTipo,
 	return i, err
 }
 
-const getUsuarioByEmail = `-- name: GetUsuarioByEmail :one
-SELECT id, nome, email, senha, criado_em, atualizado_em FROM usuarios
-WHERE email = $1 limit 1
+const getUsuarioByUsuario = `-- name: GetUsuarioByUsuario :one
+SELECT id, nome, usuario, senha, criado_em, atualizado_em FROM usuarios
+WHERE usuario = $1 limit 1
 `
 
-type GetUsuarioByEmailRow struct {
+type GetUsuarioByUsuarioRow struct {
 	ID           int32            `json:"id"`
 	Nome         string           `json:"nome"`
-	Email        string           `json:"email"`
+	Usuario        string           `json:"usuario"`
 	Senha        string           `json:"senha"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
 }
 
-func (q *Queries) GetUsuarioByEmail(ctx context.Context, email string) (Usuario, error) {
-	row := q.db.QueryRow(ctx, getUsuarioByEmail, email)
+func (q *Queries) GetUsuarioByUsuario(ctx context.Context, usuario string) (Usuario, error) {
+	row := q.db.QueryRow(ctx, getUsuarioByUsuario, usuario)
 	var i Usuario
 	err := row.Scan(
 		&i.ID,
 		&i.Nome,
-		&i.Email,
+		&i.Usuario,
 		&i.Senha,
 		&i.CriadoEm,
 		&i.AtualizadoEm,
@@ -618,14 +618,14 @@ func (q *Queries) GetUsuarioByEmail(ctx context.Context, email string) (Usuario,
 }
 
 const getUsuarioById = `-- name: GetUsuarioById :one
-SELECT id, nome, email, notificacoes, senha, criado_em, atualizado_em FROM usuarios
+SELECT id, nome, usuario, notificacoes, senha, criado_em, atualizado_em FROM usuarios
 WHERE id = $1 limit 1
 `
 
 type GetUsuarioByIdRow struct {
 	ID           int32            `json:"id"`
 	Nome         string           `json:"nome"`
-	Email        string           `json:"email"`
+	Usuario        string           `json:"usuario"`
 	Notificacoes []byte           `json:"notificacoes"`
 	Senha        string           `json:"senha"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
@@ -638,7 +638,7 @@ func (q *Queries) GetUsuarioById(ctx context.Context, id int32) (Usuario, error)
 	err := row.Scan(
 		&i.ID,
 		&i.Nome,
-		&i.Email,
+		&i.Usuario,
 		&i.Notificacoes,
 		&i.Senha,
 		&i.CriadoEm,
@@ -1035,14 +1035,14 @@ func (q *Queries) ListTarefasMovimentadasNoPeriodo(ctx context.Context, arg List
 }
 
 const listUsuarios = `-- name: ListUsuarios :many
-SELECT id, nome, email, criado_em, atualizado_em FROM usuarios
+SELECT id, nome, usuario, criado_em, atualizado_em FROM usuarios
 ORDER BY nome
 `
 
 type ListUsuariosRow struct {
 	ID           int32            `json:"id"`
 	Nome         string           `json:"nome"`
-	Email        string           `json:"email"`
+	Usuario        string           `json:"usuario"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
 }
@@ -1059,7 +1059,7 @@ func (q *Queries) ListUsuarios(ctx context.Context) ([]ListUsuariosRow, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Nome,
-			&i.Email,
+			&i.Usuario,
 			&i.CriadoEm,
 			&i.AtualizadoEm,
 		); err != nil {
@@ -1270,16 +1270,16 @@ func (q *Queries) UpdateTarefaTipo(ctx context.Context, arg UpdateTarefaTipoPara
 const updateUsuario = `-- name: UpdateUsuario :one
 UPDATE usuarios
 SET nome = $1,
-    email = $2,
+    usuario = $2,
     senha = COALESCE(NULLIF($3, ''), senha),
     atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $4
-RETURNING id, nome, email, criado_em, atualizado_em
+RETURNING id, nome, usuario, criado_em, atualizado_em
 `
 
 type UpdateUsuarioParams struct {
 	Nome  string      `json:"nome"`
-	Email string      `json:"email"`
+	Usuario string      `json:"usuario"`
 	Senha interface{} `json:"senha"`
 	ID    int32       `json:"id"`
 }
@@ -1287,7 +1287,7 @@ type UpdateUsuarioParams struct {
 type UpdateUsuarioRow struct {
 	ID           int32            `json:"id"`
 	Nome         string           `json:"nome"`
-	Email        string           `json:"email"`
+	Usuario        string           `json:"usuario"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
 }
@@ -1295,7 +1295,7 @@ type UpdateUsuarioRow struct {
 func (q *Queries) UpdateUsuario(ctx context.Context, arg UpdateUsuarioParams) (UpdateUsuarioRow, error) {
 	row := q.db.QueryRow(ctx, updateUsuario,
 		arg.Nome,
-		arg.Email,
+		arg.Usuario,
 		arg.Senha,
 		arg.ID,
 	)
@@ -1303,7 +1303,7 @@ func (q *Queries) UpdateUsuario(ctx context.Context, arg UpdateUsuarioParams) (U
 	err := row.Scan(
 		&i.ID,
 		&i.Nome,
-		&i.Email,
+		&i.Usuario,
 		&i.CriadoEm,
 		&i.AtualizadoEm,
 	)

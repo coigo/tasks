@@ -40,13 +40,13 @@ func NewUsuarioHandler(cfg UsuarioHandlerConfig) *UsuarioHandler {
 
 type CriarUsuarioRequest struct {
 	Nome  string `json:"nome" binding:"required"`
-	Email string `json:"email" binding:"required,email"`
+	Usuario string `json:"usuario" binding:"required,usuario"`
 	Senha string `json:"senha" binding:"required,min=4"`
 }
 
 type AtualizarUsuarioRequest struct {
 	Nome  string `json:"nome" binding:"required"`
-	Email string `json:"email" binding:"required,email"`
+	Usuario string `json:"usuario" binding:"required,usuario"`
 	Senha string `json:"senha"`
 }
 
@@ -81,7 +81,7 @@ func (h *UsuarioHandler) Criar(ctx *gin.Context) {
 		return
 	}
 
-	usuario, err := h.service.Criar(ctx.Request.Context(), req.Nome, req.Email, req.Senha)
+	usuario, err := h.service.Criar(ctx.Request.Context(), req.Nome, req.Usuario, req.Senha)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -102,7 +102,7 @@ func (h *UsuarioHandler) Atualizar(ctx *gin.Context) {
 		return
 	}
 
-	usuario, err := h.service.Atualizar(ctx.Request.Context(), int32(id), req.Nome, req.Email, req.Senha)
+	usuario, err := h.service.Atualizar(ctx.Request.Context(), int32(id), req.Nome, req.Usuario, req.Senha)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return

@@ -9,7 +9,7 @@ import { ClipboardList } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const schema = z.object({
-  email: z.string().email('E-mail inválido'),
+  usuario: z.string(),
   senha: z.string().min(1, 'Senha obrigatória'),
 });
 
@@ -28,7 +28,7 @@ export function Login() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await login(data.email, data.senha);
+      await login(data.usuario, data.senha);
       toast.success('Bem-vindo!');
       navigate('/');
     } catch (error) {
@@ -49,11 +49,11 @@ export function Login() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <FormInput
-            label="E-mail"
-            type="email"
+            label="Usuario"
+            type="text"
             placeholder="admin@admin.com"
-            error={errors.email?.message}
-            {...register('email')}
+            error={errors.usuario?.message}
+            {...register('usuario')}
           />
           <FormInput
             label="Senha"

@@ -15,7 +15,7 @@ import (
 
 type AuthClaims struct {
 	UsuarioID int32  `json:"usuario_id"`
-	Email     string `json:"email"`
+	Usuario     string `json:"usuario"`
 	Tipo      string `json:"tipo"`
 	jwt.RegisteredClaims
 }
@@ -55,30 +55,30 @@ func (s *AuthService) VerificarSenha(senha, hash string) bool {
 	return err == nil
 }
 
-func (s *AuthService) Login(ctx context.Context, email, senha string) (*Tokens, *repository.Usuario, error) {
-	usuario, err := s.usuarioRepository.GetUsuarioByEmail(ctx, email)
+func (s *AuthService) Login(ctx context.Context, usuario, senha string) (*Tokens, *repository.Usuario, error) {
+	usuarioReg, err := s.usuarioRepository.GetUsuarioByUsuario(ctx, usuario)
 	if err != nil {
 		return nil, nil, errors.New("credenciais invalidas")
 	}
 
-	if !s.VerificarSenha(senha, usuario.Senha) {
+	if !s.VerificarSenha(senha, usuarioReg.Senha) {
 		return nil, nil, errors.New("credenciais invalidas")
 	}
 
-	tokens, err := s.GerarTokens(usuario.ID, usuario.Email)
+	tokens, err := s.GerarTokens(usuarioReg.ID, usuarioReg.Usuario)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return tokens, &usuario, nil
+	return tokens, &usuarioReg, nil
 }
 
-func (s *AuthService) GerarTokens(usuarioID int32, email string) (*Tokens, error) {
+func (s *AuthService) GerarTokens(usuarioID int32, usuario string) (*Tokens, error) {
 	agora := time.Now()
 
 	accessClaims := AuthClaims{
 		UsuarioID: usuarioID,
-		Email:     email,
+		Usuario:     usuario,
 		Tipo:      "access",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(agora.Add(2 * time.Minute)),
@@ -94,7 +94,7 @@ func (s *AuthService) GerarTokens(usuarioID int32, email string) (*Tokens, error
 
 	refreshClaims := AuthClaims{
 		UsuarioID: usuarioID,
-		Email:     email,
+		Usuario:     usuario,
 		Tipo:      "refresh",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(agora.Add(30 * 24 * time.Hour)),
@@ -147,5 +147,5 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*Tokens
 		return nil, errors.New("usuario nao encontrado")
 	}
 
-	return s.GerarTokens(usuario.ID, usuario.Email)
+	return s.GerarTokens(usuario.ID, usuario.Usuario)
 }

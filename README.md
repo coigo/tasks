@@ -47,7 +47,7 @@ Sistema de gestão de tarefas com foco em visualização e relatórios.
    JWT_SECRET=tasks-secret-key-change-in-production
 
    # Usuário admin inicial
-   ADMIN_EMAIL=admin@admin.com
+   ADMIN_USUARIO=admin@admin.com
    ADMIN_PASSWORD=teste@$123
 
    # Porta da API
@@ -75,7 +75,7 @@ go run ./cmd/main
 Na primeira execução:
 
 - As migrations do Goose são aplicadas automaticamente.
-- O usuário admin é criado com as credenciais definidas em `ADMIN_EMAIL` e `ADMIN_PASSWORD`.
+- O usuário admin é criado com as credenciais definidas em `ADMIN_USUARIO` e `ADMIN_PASSWORD`.
 
 A API ficará disponível em `http://localhost:8080`.
 

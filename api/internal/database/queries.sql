@@ -1,28 +1,28 @@
--- name: GetUsuarioByEmail :one
-SELECT id, nome, email, senha, criado_em, atualizado_em FROM usuarios
-WHERE email = $1 limit 1;
+-- name: GetUsuarioByUsuario :one
+SELECT id, nome, usuario, senha, criado_em, atualizado_em FROM usuarios
+WHERE usuario = $1 limit 1;
 
 -- name: GetUsuarioById :one
-SELECT id, nome, email, notificacoes, senha, criado_em, atualizado_em FROM usuarios
+SELECT id, nome, usuario, notificacoes, senha, criado_em, atualizado_em FROM usuarios
 WHERE id = $1 limit 1;
 
 -- name: ListUsuarios :many
-SELECT id, nome, email, criado_em, atualizado_em FROM usuarios
+SELECT id, nome, usuario, criado_em, atualizado_em FROM usuarios
 ORDER BY nome;
 
 -- name: CreateUsuario :one
-INSERT INTO usuarios (nome, email, senha)
+INSERT INTO usuarios (nome, usuario, senha)
 VALUES ($1, $2, $3)
-RETURNING id, nome, email, criado_em, atualizado_em;
+RETURNING id, nome, usuario, criado_em, atualizado_em;
 
 -- name: UpdateUsuario :one
 UPDATE usuarios
 SET nome = sqlc.arg(nome),
-    email = sqlc.arg(email),
+    usuario = sqlc.arg(usuario),
     senha = COALESCE(NULLIF(sqlc.arg(senha), ''), senha),
     atualizado_em = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg(id)
-RETURNING id, nome, email, criado_em, atualizado_em;
+RETURNING id, nome, usuario, criado_em, atualizado_em;
 
 -- name: DeleteUsuario :exec
 DELETE FROM usuarios WHERE id = $1;

@@ -27,16 +27,16 @@ func NewUsuarioService(repo ports.IUsuarioRepository, authService *AuthService) 
 }
 
 func (s *UsuarioService) SeedAdmin(ctx context.Context) error {
-	email := os.Getenv("ADMIN_EMAIL")
-	if email == "" {
-		email = "admin@admin.com"
+	usuario := os.Getenv("ADMIN_USUARIO")
+	if usuario == "" {
+		usuario = "admin@admin.com"
 	}
 	senha := os.Getenv("ADMIN_PASSWORD")
 	if senha == "" {
 		senha = "admin123"
 	}
 
-	_, err := s.usuarioRepository.GetUsuarioByEmail(ctx, email)
+	_, err := s.usuarioRepository.GetUsuarioByUsuario(ctx, usuario)
 	if err == nil {
 		return nil
 	}
@@ -48,20 +48,20 @@ func (s *UsuarioService) SeedAdmin(ctx context.Context) error {
 
 	_, err = s.usuarioRepository.CreateUsuario(ctx, repository.CreateUsuarioParams{
 		Nome:  "Administrador",
-		Email: email,
+		Usuario: usuario,
 		Senha: senhaHash,
 	})
 	if err != nil {
 		return fmt.Errorf("erro ao criar usuario admin: %w", err)
 	}
 
-	fmt.Printf("Usuario admin criado: %s\n", email)
+	fmt.Printf("Usuario admin criado: %s\n", usuario)
 	return nil
 }
 
-func (s *UsuarioService) Criar(ctx context.Context, nome, email, senha string) (*repository.CreateUsuarioRow, error) {
-	if nome == "" || email == "" || senha == "" {
-		return nil, errors.New("nome, email e senha sao obrigatorios")
+func (s *UsuarioService) Criar(ctx context.Context, nome, usuario, senha string) (*repository.CreateUsuarioRow, error) {
+	if nome == "" || usuario == "" || senha == "" {
+		return nil, errors.New("nome, usuario e senha sao obrigatorios")
 	}
 
 	senhaHash, err := s.authService.HashSenha(senha)
@@ -69,16 +69,16 @@ func (s *UsuarioService) Criar(ctx context.Context, nome, email, senha string) (
 		return nil, err
 	}
 
-	usuario, err := s.usuarioRepository.CreateUsuario(ctx, repository.CreateUsuarioParams{
+	usuarioReg, err := s.usuarioRepository.CreateUsuario(ctx, repository.CreateUsuarioParams{
 		Nome:  nome,
-		Email: email,
+		Usuario: usuario,
 		Senha: senhaHash,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar usuario: %w", err)
 	}
 
-	return &usuario, nil
+	return &usuarioReg, nil
 }
 
 func (s *UsuarioService) BuscarPorId(ctx context.Context, id int32) (*repository.Usuario, error) {
@@ -93,7 +93,7 @@ func (s *UsuarioService) Listar(ctx context.Context) ([]repository.ListUsuariosR
 	return s.usuarioRepository.ListUsuarios(ctx)
 }
 
-func (s *UsuarioService) Atualizar(ctx context.Context, id int32, nome, email, senha string) (*repository.UpdateUsuarioRow, error) {
+func (s *UsuarioService) Atualizar(ctx context.Context, id int32, nome, usuario, senha string) (*repository.UpdateUsuarioRow, error) {
 	var senhaHash string
 	if senha != "" {
 		h, err := s.authService.HashSenha(senha)
@@ -103,16 +103,16 @@ func (s *UsuarioService) Atualizar(ctx context.Context, id int32, nome, email, s
 		senhaHash = h
 	}
 
-	usuario, err := s.usuarioRepository.UpdateUsuario(ctx, repository.UpdateUsuarioParams{
+	usuarioReg, err := s.usuarioRepository.UpdateUsuario(ctx, repository.UpdateUsuarioParams{
 		ID:    id,
 		Nome:  nome,
-		Email: email,
+		Usuario: usuario,
 		Senha: senhaHash,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao atualizar usuario: %w", err)
 	}
-	return &usuario, nil
+	return &usuarioReg, nil
 }
 
 func (s *UsuarioService) Remover(ctx context.Context, id int32) error {
@@ -171,9 +171,9 @@ func (s *UsuarioService) LetNotificacao(ctx context.Context, arg models.LerNotif
 
 func (s *UsuarioService) NotificarUsuario(ctx context.Context, notificacao models.CriarUsuarioNotificacao) error {
 	
-	if notificacao.ResponsavelId == notificacao.UsuarioNotificadoId {
-		return nil
-	}
+	// if notificacao.ResponsavelId == notificacao.UsuarioNotificadoId {
+	// 	return nil
+	// }
 	
 	usuarioNotificado, err := s.usuarioRepository.GetUsuarioById(ctx, notificacao.UsuarioNotificadoId)
 	if err != nil {

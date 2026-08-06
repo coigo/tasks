@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"net/http"
 	"tasks/internal/services"
 
@@ -29,18 +32,23 @@ func NewAuthHandler(cfg AuthHandlerConfig) *AuthHandler {
 }
 
 type LoginRequest struct {
-	Email string `json:"email" binding:"required,email"`
+	Usuario string `json:"usuario" binding:"required"`
 	Senha string `json:"senha" binding:"required"`
 }
 
 func (h *AuthHandler) Login(ctx *gin.Context) {
+	bodyBytes, _ := io.ReadAll(ctx.Request.Body)
+	fmt.Println("> login body cru:", string(bodyBytes))
+
+	// devolve o body pro request, senão ShouldBindJSON não vai conseguir ler nada
+	ctx.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
 	var req LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "dados invalidos"})
 		return
 	}
-
-	tokens, usuario, err := h.authService.Login(ctx.Request.Context(), req.Email, req.Senha)
+	tokens, usuario, err := h.authService.Login(ctx.Request.Context(), req.Usuario, req.Senha)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
 		return
@@ -51,7 +59,7 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		"usuario": gin.H{
 			"id":    usuario.ID,
 			"nome":  usuario.Nome,
-			"email": usuario.Email,
+			"usuario": usuario.Usuario,
 		},
 	})
 }

@@ -16,7 +16,7 @@ type IProjetoRepository interface {
 type IUsuarioRepository interface {
 	CreateUsuario(ctx context.Context, arg repository.CreateUsuarioParams) (repository.CreateUsuarioRow, error)
 	GetUsuarioById(ctx context.Context, id int32) (repository.Usuario, error)
-	GetUsuarioByEmail(ctx context.Context, email string) (repository.Usuario, error)
+	GetUsuarioByUsuario(ctx context.Context, usuario string) (repository.Usuario, error)
 	ListUsuarios(ctx context.Context) ([]repository.ListUsuariosRow, error)
 	UpdateUsuario(ctx context.Context, arg repository.UpdateUsuarioParams) (repository.UpdateUsuarioRow, error)
 	DeleteUsuario(ctx context.Context, id int32) error
