@@ -3,16 +3,23 @@ import { Link } from 'react-router-dom';
 import { Bell, Check } from 'lucide-react';
 import { parse, format } from 'date-fns';
 import { useNotifications } from '../context/NotificationContext';
+import api from '../services/api';
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
-  const { notifications, unreadCount, isLoading } = useNotifications();
+  const { notifications, unreadCount, isLoading, lerNotificacao } = useNotifications();
 
+   const onClickNotificacao = async (notificacaoId: number) => {
+      lerNotificacao(notificacaoId)      
+      setIsOpen(false)
+   }
+   
   const formatDate = (dateStr: string) => {
     const date = parse(dateStr, 'yyyy-MM-dd HH:mm', new Date());
     return format(date, 'dd/MM/yyyy HH:mm');
   };
 
+   
   return (
     <div className="relative">
       <button
@@ -51,7 +58,7 @@ export function NotificationBell() {
                     <li key={index}>
                       <Link
                         to={notification.redirecionarPara || '#'}
-                        onClick={() => setIsOpen(false)}
+                        onClick={() => onClickNotificacao(notification.id)}
                         className={`flex items-start gap-3 p-3 hover:bg-gray-50 transition-colors ${
                           !notification.lido ? 'bg-blue-50/50' : ''
                         }`}

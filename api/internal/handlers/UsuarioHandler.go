@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"tasks/internal/middleware"
+	"tasks/internal/models"
 	"tasks/internal/services"
 	"tasks/internal/utils"
 
@@ -32,6 +32,7 @@ func NewUsuarioHandler(cfg UsuarioHandlerConfig) *UsuarioHandler {
 	group.PUT("/:id", handler.Atualizar)
 	group.DELETE("/:id", handler.Remover)
 	group.GET("/notificacoes", handler.BuscarNotificacoes)
+	group.PUT("/notificacoes/:id", handler.LerNotificacao)
 	
 
 	return handler
@@ -125,11 +126,32 @@ func (h *UsuarioHandler) Remover(ctx *gin.Context) {
 
 func (h *UsuarioHandler) BuscarNotificacoes(ctx *gin.Context) {
 	usuarioId := middleware.GetUsuarioID(ctx)
-	fmt.Println("> UID:", usuarioId)
 	notificacoes, err := h.service.BuscarNotificacoes(ctx.Request.Context(), usuarioId)
 	if  err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, notificacoes)
+}
+
+func (h *UsuarioHandler) LerNotificacao(ctx *gin.Context) {
+
+	usuarioId := middleware.GetUsuarioID(ctx)
+
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "id invalido"})
+		return
+	}
+	
+	err = h.service.LetNotificacao(ctx.Request.Context(), models.LerNotificacao{
+		ID: int64(id),
+		UsuarioId: usuarioId,
+	})
+	
+	if  err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, nil)
 }

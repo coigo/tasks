@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"tasks/internal/models"
 	"tasks/internal/repository"
@@ -132,11 +133,47 @@ func (s *UsuarioService) BuscarNotificacoes(ctx context.Context, id int32) ([]mo
 	return notificacoes, nil
 }
 
-func (s *UsuarioService) NotificarUsuario(ctx context.Context, notificacao models.CriarUsuarioNotificacao) error {
+func (s *UsuarioService) LetNotificacao(ctx context.Context, arg models.LerNotificacao) error {
+
+	usuarioNotificacoes, err :=s.usuarioRepository.ListNotificacoes(ctx, arg.UsuarioId)
+	if err != nil {
+		return fmt.Errorf("Notificacoes nao encontradas: %w", err)
+	}
+
+	var notificacoes []models.UsuarioNotificacao
+	err = json.Unmarshal(usuarioNotificacoes, &notificacoes)
+	if err != nil {
+		return fmt.Errorf("Erro ao formatar notificacoes: %w", err)
+	}
 	
-	if notificacao.ResponsavelId == notificacao.UsuarioNotificadoId {
+	i := slices.IndexFunc(notificacoes, func (n models.UsuarioNotificacao) bool {
+		return n.ID == arg.ID
+	})
+
+	if i == -1 {
 		return nil
 	}
+
+	notificacoes[i].Lido = true
+
+	notificacoesFormat, err := json.Marshal(notificacoes)
+	if err != nil {
+		fmt.Println(err)
+		return fmt.Errorf("erro ao formatar as notificacoes: %w", err)
+	}
+
+	return s.usuarioRepository.UpdateUsuarioNotificacoes(ctx, repository.UpdateUsuarioNotificacoesParams{
+		Notificacoes: notificacoesFormat,
+		ID:           arg.UsuarioId,
+	})
+
+}
+
+func (s *UsuarioService) NotificarUsuario(ctx context.Context, notificacao models.CriarUsuarioNotificacao) error {
+	
+	// if notificacao.ResponsavelId == notificacao.UsuarioNotificadoId {
+	// 	return nil
+	// }
 	
 	usuarioNotificado, err := s.usuarioRepository.GetUsuarioById(ctx, notificacao.UsuarioNotificadoId)
 	if err != nil {
@@ -148,20 +185,21 @@ func (s *UsuarioService) NotificarUsuario(ctx context.Context, notificacao model
 		return fmt.Errorf("usuario nao encontrado: %w", err)
 	}
 
-	fmt.Println("> Responsavel: ", strings.Fields(responsavel.Nome)[0])
 	mensagem := fmt.Sprintf("Você recebeu uma nova tarefa de %v", strings.Fields(responsavel.Nome)[0])
 	redirecionarPara := fmt.Sprintf("/tarefas/%v", notificacao.TarefaId)
-
+	criadoEm := time.Now()
+	
 	var notificacoes []models.UsuarioNotificacao
 	if err := json.Unmarshal(usuarioNotificado.Notificacoes, &notificacoes); err != nil {
 		return nil
 	}
 
 	novaNotificacao := []models.UsuarioNotificacao{{
+		ID: 					criadoEm.Unix(),
 		Mensagem:         mensagem,
 		RedirecionarPara: redirecionarPara,
 		Lido:             false,
-		CriadoEm:         time.Now().Format("2006-01-02 15:04"),
+		CriadoEm:         criadoEm.Format("2006-01-02 15:04"),
 	}}
 
 	notificacoes = append(novaNotificacao, notificacoes...)

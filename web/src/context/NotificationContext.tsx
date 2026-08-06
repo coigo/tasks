@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import api from '../services/api';
 
 interface UsuarioNotificacao {
+  id: number;
   mensagem: string;
   redirecionarPara: string;
   lido: boolean;
@@ -13,41 +14,51 @@ interface NotificationContextData {
   unreadCount: number;
   isLoading: boolean;
   refetch: () => void;
+  lerNotificacao: (notificacaoId: number) => void
 }
 
 const NotificationContext = createContext<NotificationContextData | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState<UsuarioNotificacao[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [fetched, setFetched] = useState(false);
+   const [notifications, setNotifications] = useState<UsuarioNotificacao[]>([]);
+   const [isLoading, setIsLoading] = useState(false);
+   const [fetched, setFetched] = useState(false);
 
-  const fetchNotifications = async () => {
-    if (fetched) return;
-    setIsLoading(true);
-    try {
-      const response = await api.get('/usuarios/notificacoes');
-      setNotifications(response.data);
-      setFetched(true);
-    } catch {
-      setNotifications([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+   const fetchNotifications = async () => {
+      if (fetched) return;
+      setIsLoading(true);
+      try {
+         const response = await api.get('/usuarios/notificacoes');
+         setNotifications(response.data);
+         setFetched(true);
+      } catch {
+         setNotifications([]);
+      } finally {
+         setIsLoading(false);
+      }
+   };
 
-  useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      fetchNotifications();
-    }
-  }, []);
+   useEffect(() => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+         fetchNotifications();
+      }
+   }, []);
 
+   const lerNotificacao = async (notificacaoId: number) => {
+      setNotifications(prev =>
+         prev.map(item =>
+            item.id === notificacaoId ? { ...item, lido: true } : item
+         )
+      );
+      await api.put(`/usuarios/notificacoes/${notificacaoId}`)
+   }
+   
   const unreadCount = notifications.filter((n) => !n.lido).length;
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, isLoading, refetch: fetchNotifications }}
+      value={{ notifications, unreadCount, isLoading, refetch: fetchNotifications, lerNotificacao }}
     >
       {children}
     </NotificationContext.Provider>
