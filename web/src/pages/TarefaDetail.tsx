@@ -22,6 +22,7 @@ import {
   FileText,
   Files,
   History,
+  Eye,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -469,7 +470,7 @@ export function TarefaDetail() {
 
               {anexos.length > 0 && (
                 <div className="space-y-3">
-                  <p className="text-sm font-medium text-gray-700">Arquivos confirmados</p>
+                  <p className="text-sm font-medium text-gray-700">Arquivos Anexados</p>
                   {anexos.map((anexo) => (
                     <div
                       key={anexo.id}
@@ -482,7 +483,7 @@ export function TarefaDetail() {
                           variant="ghost"
                           onClick={() => handleDownloadAnexo(anexo)}
                         >
-                          <Download size={16} />
+                          <Eye size={16} />
                         </Button>
                         <Button
                           size="sm"

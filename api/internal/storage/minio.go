@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"mime"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -95,8 +97,8 @@ func (s *MinioStorage) ensureBucket(ctx context.Context) error {
 }
 
 func (s *MinioStorage) UploadTemp(ctx context.Context, nome string, conteudo io.Reader) (string, error) {
-	arquivoUUID := uuid.New().String()
-	destino := fmt.Sprintf("temp/%s", arquivoUUID)
+	arquivoUUID := uuid.New().String() + filepath.Ext(nome)
+	destino := fmt.Sprintf("temp/%s", arquivoUUID )
 	
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.bucket),
@@ -129,10 +131,18 @@ func (s *MinioStorage) MoverTempParaTarefa(ctx context.Context, arquivoUUID stri
 }
 
 func (s *MinioStorage) GerarURLAssinada(ctx context.Context, local string, duracao time.Duration) (string, error) {
+	ext := filepath.Ext(local)
+	contentType := mime.TypeByExtension(ext)
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
 	presigner := s3.NewPresignClient(s.client)
 	req, err := presigner.PresignGetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(local),
+		Bucket:                     aws.String(s.bucket),
+		Key:                        aws.String(local),
+		ResponseContentDisposition: aws.String("inline"),
+		ResponseContentType:        aws.String(contentType),
 	}, s3.WithPresignExpires(duracao))
 	if err != nil {
 		return "", fmt.Errorf("erro ao gerar url assinada: %w", err)

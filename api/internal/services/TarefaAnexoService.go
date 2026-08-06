@@ -7,6 +7,7 @@ import (
 	"tasks/internal/repository"
 	"tasks/internal/repository/ports"
 	"tasks/internal/storage"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -86,7 +87,7 @@ func (s *TarefaAnexoService) GerarURL(ctx context.Context, anexoID int32) (strin
 		return "", nil, fmt.Errorf("anexo nao encontrado: %w", err)
 	}
 
-	url, err := s.storage.GerarURLAssinada(ctx, anexo.Local, 15*60)
+	url, err := s.storage.GerarURLAssinada(ctx, anexo.Local, time.Minute * 15)
 	if err != nil {
 		return "", nil, err
 	}

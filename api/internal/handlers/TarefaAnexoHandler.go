@@ -60,7 +60,6 @@ func (h *TarefaAnexoHandler) UploadTemp(ctx *gin.Context) {
 		return
 	}
 	defer file.Close()
-
 	uuid, err := h.service.UploadTemp(ctx.Request.Context(), header.Filename, file)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
