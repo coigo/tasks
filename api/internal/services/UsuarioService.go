@@ -171,9 +171,9 @@ func (s *UsuarioService) LetNotificacao(ctx context.Context, arg models.LerNotif
 
 func (s *UsuarioService) NotificarUsuario(ctx context.Context, notificacao models.CriarUsuarioNotificacao) error {
 	
-	// if notificacao.ResponsavelId == notificacao.UsuarioNotificadoId {
-	// 	return nil
-	// }
+	if notificacao.ResponsavelId == notificacao.UsuarioNotificadoId {
+		return nil
+	}
 	
 	usuarioNotificado, err := s.usuarioRepository.GetUsuarioById(ctx, notificacao.UsuarioNotificadoId)
 	if err != nil {
