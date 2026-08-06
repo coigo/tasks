@@ -9,6 +9,7 @@ import { TarefaList } from '../components/TarefaList';
 import { KanbanBoard } from '../components/KanbanBoard';
 import type { KanbanTarefa } from '../components/KanbanCard';
 import type { Situacao } from '../components/KanbanColumn';
+import { useAppSettings } from '../hooks/useLocalStorage';
 
 interface Filtro {
   responsavelId: string;
@@ -22,7 +23,7 @@ interface Filtro {
 export function Tarefas() {
   const [tarefas, setTarefas] = useState<KanbanTarefa[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
+  const [settings, setSettings] = useAppSettings();
   const [filtros, setFiltros] = useState<Filtro>({
     responsavelId: '',
     situacaoId: '',
@@ -121,9 +122,9 @@ export function Tarefas() {
         <div className="flex items-center gap-3">
           <div className="flex border border-gray-200 rounded-lg overflow-hidden">
             <button
-              onClick={() => setViewMode('list')}
+              onClick={() => setSettings({ ...settings, tarefasViewMode: 'list' })}
               className={`px-3 py-2 flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                viewMode === 'list'
+                settings.tarefasViewMode === 'list'
                   ? 'bg-primary text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-50'
               }`}
@@ -132,9 +133,9 @@ export function Tarefas() {
               Lista
             </button>
             <button
-              onClick={() => setViewMode('kanban')}
+              onClick={() => setSettings({ ...settings, tarefasViewMode: 'kanban' })}
               className={`px-3 py-2 flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                viewMode === 'kanban'
+                settings.tarefasViewMode === 'kanban'
                   ? 'bg-primary text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-50'
               }`}
@@ -204,7 +205,7 @@ export function Tarefas() {
         </label>
       </Card>
 
-      {viewMode === 'list' ? (
+      {settings.tarefasViewMode === 'list' ? (
         <Card title="Lista de tarefas">
           <TarefaList tarefas={tarefas} isLoading={isLoading} />
         </Card>
