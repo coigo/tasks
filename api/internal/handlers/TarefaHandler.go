@@ -48,24 +48,24 @@ func NewTarefaHandler(cfg TarefaHandlerConfig) *TarefaHandler {
 type CriarTarefaRequest struct {
 	Titulo        string   `json:"titulo" binding:"required"`
 	Descricao     string   `json:"descricao"`
-	ProjetoID     int32    `json:"projeto_id" binding:"required"`
-	ResponsavelID int32    `json:"responsavel_id" binding:"required"`
-	SituacaoID    int32    `json:"situacao_id" binding:"required"`
-	TipoID        int32    `json:"tipo_id" binding:"required"`
+	ProjetoID     int32    `json:"projetoId" binding:"required"`
+	ResponsavelID int32    `json:"responsavelId" binding:"required"`
+	SituacaoID    int32    `json:"situacaoId" binding:"required"`
+	TipoID        int32    `json:"tipoId" binding:"required"`
 	Anexos        []string `json:"anexos"`
 }
 
 type AtualizarTarefaRequest struct {
 	Titulo        string `json:"titulo" binding:"required"`
 	Descricao     string `json:"descricao"`
-	ProjetoID     int32  `json:"projeto_id" binding:"required"`
-	ResponsavelID int32  `json:"responsavel_id" binding:"required"`
-	SituacaoID    int32  `json:"situacao_id" binding:"required"`
-	TipoID        int32  `json:"tipo_id" binding:"required"`
+	ProjetoID     int32  `json:"projetoId" binding:"required"`
+	ResponsavelID int32  `json:"responsavelId" binding:"required"`
+	SituacaoID    int32  `json:"situacaoId" binding:"required"`
+	TipoID        int32  `json:"tipoId" binding:"required"`
 }
 
 type MoverTarefaRequest struct {
-	SituacaoID int32 `json:"situacao_id" binding:"required"`
+	SituacaoID int32 `json:"situacaoId" binding:"required"`
 }
 
 func (h *TarefaHandler) Listar(ctx *gin.Context) {

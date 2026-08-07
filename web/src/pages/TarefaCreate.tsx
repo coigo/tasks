@@ -27,10 +27,10 @@ interface TarefaCriada {
 const schema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
   descricao: z.string(),
-  projeto_id: z.string().min(1, 'Projeto é obrigatório'),
-  responsavel_id: z.string().min(1, 'Responsável é obrigatório'),
-  situacao_id: z.string().min(1, 'Situação é obrigatória'),
-  tipo_id: z.string().min(1, 'Tipo é obrigatório'),
+  projetoId: z.string().min(1, 'Projeto é obrigatório'),
+  responsavelId: z.string().min(1, 'Responsável é obrigatório'),
+  situacaoId: z.string().min(1, 'Situação é obrigatória'),
+  tipoId: z.string().min(1, 'Tipo é obrigatório'),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -78,10 +78,10 @@ export function TarefaCreate() {
       const payload = {
         titulo: data.titulo,
         descricao: data.descricao,
-        projeto_id: Number(data.projeto_id),
-        responsavel_id: Number(data.responsavel_id),
-        situacao_id: Number(data.situacao_id),
-        tipo_id: Number(data.tipo_id),
+        projetoId: Number(data.projetoId),
+        responsavelId: Number(data.responsavelId),
+        situacaoId: Number(data.situacaoId),
+        tipoId: Number(data.tipoId),
         anexos: arquivosTemp.map((a) => a.uuid),
       };
       const response = await criar<TarefaCriada>(payload);

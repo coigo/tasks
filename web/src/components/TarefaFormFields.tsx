@@ -15,33 +15,34 @@ interface TarefaFormFieldsProps {
   register: UseFormRegister<{
     titulo: string;
     descricao: string;
-    projeto_id: string;
-    responsavel_id: string;
-    situacao_id: string;
-    tipo_id: string;
+    projetoId: string;
+    responsavelId: string;
+    situacaoId: string;
+    tipoId: string;
   }>;
   control: Control<{
     titulo: string;
     descricao: string;
-    projeto_id: string;
-    responsavel_id: string;
-    situacao_id: string;
-    tipo_id: string;
+    projetoId: string;
+    responsavelId: string;
+    situacaoId: string;
+    tipoId: string;
   }>;
   errors: FieldErrors<{
     titulo: string;
     descricao: string;
-    projeto_id: string;
-    responsavel_id: string;
-    situacao_id: string;
-    tipo_id: string;
+    projetoId: string;
+    responsavelId: string;
+    situacaoId: string;
+    tipoId: string;
   }>;
   opcoes: Opcoes;
 }
 
 export function TarefaFormFields({ register, control, errors, opcoes }: TarefaFormFieldsProps) {
-  return (
+   return (
     <div className="space-y-4">
+      {JSON.stringify(errors)}
       <FormInput
         label="Título"
         placeholder="Título da tarefa"
@@ -52,26 +53,26 @@ export function TarefaFormFields({ register, control, errors, opcoes }: TarefaFo
         <FormSelect
           label="Projeto"
           options={opcoes.projetos.map((p) => ({ value: p.id, label: p.nome }))}
-          error={errors.projeto_id?.message}
-          {...register('projeto_id')}
+          error={errors.projetoId?.message}
+          {...register('projetoId')}
         />
         <FormSelect
           label="Responsável"
           options={opcoes.usuarios.map((u) => ({ value: u.id, label: u.nome }))}
-          error={errors.responsavel_id?.message}
-          {...register('responsavel_id')}
+          error={errors.responsavelId?.message}
+          {...register('responsavelId')}
         />
         <FormSelect
           label="Situação"
           options={opcoes.situacoes.map((s) => ({ value: s.id, label: s.descricao }))}
-          error={errors.situacao_id?.message}
-          {...register('situacao_id')}
+          error={errors.situacaoId?.message}
+          {...register('situacaoId')}
         />
         <FormSelect
           label="Tipo"
           options={opcoes.tipos.map((t) => ({ value: t.id, label: t.descricao }))}
-          error={errors.tipo_id?.message}
-          {...register('tipo_id')}
+          error={errors.tipoId?.message}
+          {...register('tipoId')}
         />
       </div>
       <Controller

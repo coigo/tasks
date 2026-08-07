@@ -59,7 +59,7 @@ export function KanbanBoard({ tarefas, situacoes, onTarefaMoved }: KanbanBoardPr
 
     try {
       await api.put(`/tarefas/${tarefaId}/mover`, {
-        situacao_id: novaSituacaoId,
+        situacaoId: novaSituacaoId,
       });
       toast.success('Tarefa movida');
       onTarefaMoved?.();
