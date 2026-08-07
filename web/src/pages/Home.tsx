@@ -162,11 +162,7 @@ export function Home() {
                 to={`/tarefas/${tarefa.id}`}
                 className="flex items-center justify-between py-4 hover:bg-gray-50 -mx-5 px-5 transition-colors"
               >
-                  {
-                     (() => {
-                        console.log(JSON.stringify(tarefa))
-                        return <></>
-                     })()}
+
                 <div>
                   <p className="font-medium text-gray-900">
                     #{tarefa.numero}/{tarefa.ano} {tarefa.titulo}

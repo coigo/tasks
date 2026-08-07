@@ -42,7 +42,6 @@ interface TarefaFormFieldsProps {
 export function TarefaFormFields({ register, control, errors, opcoes }: TarefaFormFieldsProps) {
    return (
     <div className="space-y-4">
-      {JSON.stringify(errors)}
       <FormInput
         label="Título"
         placeholder="Título da tarefa"

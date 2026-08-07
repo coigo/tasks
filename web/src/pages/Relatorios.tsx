@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
 import { Card } from '../components/Card';
-import { FormSelect } from '../components/FormSelect';
 import { FormInput } from '../components/FormInput';
 import { FileBarChart, FolderKanban, ListTodo, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -105,7 +104,7 @@ export function Relatorios() {
     carregarTarefas();
   }, [dataInicio, dataFim]);
 
-  const periodoOptions = [
+  const periodoButtons: { value: PeriodoOpcao; label: string }[] = [
     { value: 'essa_semana', label: 'Essa semana' },
     { value: 'esse_mes', label: 'Esse mês' },
     { value: 'esse_ano', label: 'Esse ano' },
@@ -119,41 +118,48 @@ export function Relatorios() {
         <p className="text-gray-500">Acompanhe as métricas e tarefas por período</p>
       </div>
 
-      <Card title="Período">
-        <div className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="w-full md:w-48">
-            <FormSelect
-              label="Período"
-              options={periodoOptions}
-              value={periodo}
-              onChange={(e) => setPeriodo(e.target.value as PeriodoOpcao)}
-            />
-          </div>
-          {periodo === 'data_definida' && (
-            <>
-              <div className="w-full md:w-40">
-                <FormInput
-                  label="Data início"
-                  type="date"
-                  value={dataInicioInput}
-                  onChange={(e) => setDataInicioInput(e.target.value)}
-                />
-              </div>
-              <div className="w-full md:w-40">
-                <FormInput
-                  label="Data fim"
-                  type="date"
-                  value={dataFimInput}
-                  onChange={(e) => setDataFimInput(e.target.value)}
-                />
-              </div>
-            </>
-          )}
-          <div className="text-sm text-gray-500 pb-1.5">
-            {format(new Date(dataInicio), 'dd/MM/yyyy', { locale: ptBR })} - {format(new Date(dataFim), 'dd/MM/yyyy', { locale: ptBR })}
-          </div>
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          {periodoButtons.map((btn) => (
+            <button
+              key={btn.value}
+              onClick={() => setPeriodo(btn.value)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                periodo === btn.value
+                  ? 'bg-primary text-white'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              {btn.label}
+            </button>
+          ))}
         </div>
-      </Card>
+
+        {periodo === 'data_definida' && (
+          <div className="flex gap-4 items-end">
+            <div className="w-40">
+              <FormInput
+                label="Data início"
+                type="date"
+                value={dataInicioInput}
+                onChange={(e) => setDataInicioInput(e.target.value)}
+              />
+            </div>
+            <div className="w-40">
+              <FormInput
+                label="Data fim"
+                type="date"
+                value={dataFimInput}
+                onChange={(e) => setDataFimInput(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="text-sm text-gray-500">
+          Período: {format(new Date(dataInicio), 'dd/MM/yyyy', { locale: ptBR })} - {format(new Date(dataFim), 'dd/MM/yyyy', { locale: ptBR })}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
