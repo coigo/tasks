@@ -51,7 +51,7 @@ export function Login() {
           <FormInput
             label="Usuario"
             type="text"
-            placeholder="admin@admin.com"
+            placeholder="user.name"
             error={errors.usuario?.message}
             {...register('usuario')}
           />

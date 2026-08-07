@@ -29,7 +29,7 @@ func NewUsuarioService(repo ports.IUsuarioRepository, authService *AuthService) 
 func (s *UsuarioService) SeedAdmin(ctx context.Context) error {
 	usuario := os.Getenv("ADMIN_USUARIO")
 	if usuario == "" {
-		usuario = "admin@admin.com"
+		usuario = "admin"
 	}
 	senha := os.Getenv("ADMIN_PASSWORD")
 	if senha == "" {

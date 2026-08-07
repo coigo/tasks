@@ -47,8 +47,8 @@ Sistema de gestão de tarefas com foco em visualização e relatórios.
    JWT_SECRET=tasks-secret-key-change-in-production
 
    # Usuário admin inicial
-   ADMIN_USUARIO=admin@admin.com
-   ADMIN_PASSWORD=teste@$123
+   ADMIN_USUARIO=admin
+   ADMIN_PASSWORD=teste123
 
    # Porta da API
    APP_PORT=8080
@@ -93,8 +93,8 @@ O frontend ficará disponível em `http://localhost:5173`.
 
 Ao iniciar o backend pela primeira vez, um usuário administrador é criado automaticamente:
 
-- **E-mail:** `admin@admin.com`
-- **Senha:** `teste@$123`
+- **E-mail:** `admin`
+- **Senha:** `teste123`
 
 Use essas credenciais na tela de login. O admin pode criar os demais usuários pela tela **Usuários**.
 

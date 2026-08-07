@@ -88,7 +88,7 @@ cd api && go run github.com/sqlc-dev/sqlc/cmd/sqlc@latest generate
 - Frontend: `http://localhost:5173`
 - PostgreSQL: `localhost:5433` (DB: `tasks`, User: `tasks`, Pass: `tasks`)
 - MinIO: `localhost:9000` (console at `localhost:9001`)
-- Default admin: `admin@admin.com` / `teste@$123`
+- Default admin: `admin` / `teste123`
 
 ## Testing Features
 - Backend auto-creates admin user on first run
