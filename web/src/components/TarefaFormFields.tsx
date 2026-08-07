@@ -19,6 +19,8 @@ interface TarefaFormFieldsProps {
     responsavelId: string;
     situacaoId: string;
     tipoId: string;
+    inicioPrevisto: string;
+    prazo: string;
   }>;
   control: Control<{
     titulo: string;
@@ -27,6 +29,8 @@ interface TarefaFormFieldsProps {
     responsavelId: string;
     situacaoId: string;
     tipoId: string;
+    inicioPrevisto: string;
+    prazo: string;
   }>;
   errors: FieldErrors<{
     titulo: string;
@@ -35,12 +39,14 @@ interface TarefaFormFieldsProps {
     responsavelId: string;
     situacaoId: string;
     tipoId: string;
+    inicioPrevisto: string;
+    prazo: string;
   }>;
   opcoes: Opcoes;
 }
 
 export function TarefaFormFields({ register, control, errors, opcoes }: TarefaFormFieldsProps) {
-   return (
+  return (
     <div className="space-y-4">
       <FormInput
         label="Título"
@@ -72,6 +78,18 @@ export function TarefaFormFields({ register, control, errors, opcoes }: TarefaFo
           options={opcoes.tipos.map((t) => ({ value: t.id, label: t.descricao }))}
           error={errors.tipoId?.message}
           {...register('tipoId')}
+        />
+        <FormInput
+          label="Início Previsto"
+          type="date"
+          error={errors.inicioPrevisto?.message}
+          {...register('inicioPrevisto')}
+        />
+        <FormInput
+          label="Prazo"
+          type="date"
+          error={errors.prazo?.message}
+          {...register('prazo')}
         />
       </div>
       <Controller

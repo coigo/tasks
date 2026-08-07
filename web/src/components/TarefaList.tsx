@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom';
 import { CORES_SITUACAO } from '../constants/coresSituacao';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar } from 'lucide-react';
 
 export interface TarefaListItem {
   id: number;
@@ -11,6 +14,7 @@ export interface TarefaListItem {
   tipoDescricao: string;
   responsavelNome: string;
   projetoNome: string;
+  prazo: string | null;
 }
 
 interface TarefaListProps {
@@ -43,15 +47,23 @@ export function TarefaList({ tarefas, isLoading }: TarefaListProps) {
               {tarefa.projetoNome} • {tarefa.tipoDescricao} • Responsável: {tarefa.responsavelNome}
             </p>
           </div>
-          <span
-            className="self-start px-3 py-1 rounded-full text-xs font-medium"
-            style={{
-              backgroundColor: `${CORES_SITUACAO[tarefa.situacaoCor]?.bg || '#6B7280'}20`,
-              color: CORES_SITUACAO[tarefa.situacaoCor]?.text || '#374151',
-            }}
-          >
-            {tarefa.situacaoDescricao}
-          </span>
+          <div className="flex items-center gap-3">
+            {tarefa.prazo && (
+              <span className="flex items-center gap-1 text-sm text-gray-500">
+                <Calendar size={14} />
+                {format(new Date(tarefa.prazo), 'dd/MM/yyyy', { locale: ptBR })}
+              </span>
+            )}
+            <span
+              className="px-3 py-1 rounded-full text-xs font-medium"
+              style={{
+                backgroundColor: `${CORES_SITUACAO[tarefa.situacaoCor]?.bg || '#6B7280'}20`,
+                color: CORES_SITUACAO[tarefa.situacaoCor]?.text || '#374151',
+              }}
+            >
+              {tarefa.situacaoDescricao}
+            </span>
+          </div>
         </Link>
       ))}
     </div>

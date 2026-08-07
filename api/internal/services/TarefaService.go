@@ -18,9 +18,17 @@ func NewTarefaService(repo ports.ITarefaRepository) *TarefaService {
 	return &TarefaService{tarefaRepository: repo}
 }
 
-func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, projetoID, criadoPorID, responsavelID, situacaoID, tipoID int32) (*repository.CreateTarefaRow, error) {
+func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, projetoID, criadoPorID, responsavelID, situacaoID, tipoID int32, inicioPrevisto, prazo *string) (*repository.CreateTarefaRow, error) {
 	if titulo == "" {
 		return nil, fmt.Errorf("titulo e obrigatorio")
+	}
+
+	if prazo != nil && inicioPrevisto != nil {
+		prazoDate, _ := time.Parse("2006-01-02", *prazo)
+		inicioDate, _ := time.Parse("2006-01-02", *inicioPrevisto)
+		if prazoDate.Before(inicioDate) {
+			return nil, fmt.Errorf("prazo deve ser maior ou igual ao inicio previsto")
+		}
 	}
 
 	ano := int32(time.Now().Year())
@@ -42,6 +50,22 @@ func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, pro
 
 	descricaoText := pgtype.Text{String: descricao, Valid: descricao != ""}
 
+	var inicioPrevistoDate pgtype.Date
+	if inicioPrevisto != nil {
+		inicioDate, err := time.Parse("2006-01-02", *inicioPrevisto)
+		if err == nil {
+			inicioPrevistoDate = pgtype.Date{Time: inicioDate, Valid: true}
+		}
+	}
+
+	var prazoDate pgtype.Date
+	if prazo != nil {
+		prazoTime, err := time.Parse("2006-01-02", *prazo)
+		if err == nil {
+			prazoDate = pgtype.Date{Time: prazoTime, Valid: true}
+		}
+	}
+
 	tarefa, err := s.tarefaRepository.CreateTarefa(ctx, repository.CreateTarefaParams{
 		Numero:        numero,
 		Ano:           ano,
@@ -52,6 +76,8 @@ func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, pro
 		ResponsavelID: responsavelID,
 		SituacaoID:    situacaoID,
 		TipoID:        tipoID,
+		InicioPrevisto: inicioPrevistoDate,
+		Prazo:         prazoDate,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar tarefa: %w", err)
@@ -79,9 +105,33 @@ func (s *TarefaService) Listar(ctx context.Context, responsavelID, situacaoID, t
 	return s.tarefaRepository.ListTarefas(ctx, params)
 }
 
-func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descricao string, projetoID, responsavelID, situacaoID, tipoID int32) (*repository.UpdateTarefaRow, error) {
+func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descricao string, projetoID, responsavelID, situacaoID, tipoID int32, inicioPrevisto, prazo *string) (*repository.UpdateTarefaRow, error) {
 	if titulo == "" {
 		return nil, fmt.Errorf("titulo e obrigatorio")
+	}
+
+	if prazo != nil && inicioPrevisto != nil {
+		prazoDate, _ := time.Parse("2006-01-02", *prazo)
+		inicioDate, _ := time.Parse("2006-01-02", *inicioPrevisto)
+		if prazoDate.Before(inicioDate) {
+			return nil, fmt.Errorf("prazo deve ser maior ou igual ao inicio previsto")
+		}
+	}
+
+	var inicioPrevistoDate pgtype.Date
+	if inicioPrevisto != nil {
+		inicioDate, err := time.Parse("2006-01-02", *inicioPrevisto)
+		if err == nil {
+			inicioPrevistoDate = pgtype.Date{Time: inicioDate, Valid: true}
+		}
+	}
+
+	var prazoDate pgtype.Date
+	if prazo != nil {
+		prazoTime, err := time.Parse("2006-01-02", *prazo)
+		if err == nil {
+			prazoDate = pgtype.Date{Time: prazoTime, Valid: true}
+		}
 	}
 
 	tarefa, err := s.tarefaRepository.UpdateTarefa(ctx, repository.UpdateTarefaParams{
@@ -92,6 +142,8 @@ func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descric
 		ResponsavelID: responsavelID,
 		SituacaoID:    situacaoID,
 		TipoID:        tipoID,
+		InicioPrevisto: inicioPrevistoDate,
+		Prazo:         prazoDate,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao atualizar tarefa: %w", err)

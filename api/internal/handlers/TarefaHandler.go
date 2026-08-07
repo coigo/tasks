@@ -52,16 +52,20 @@ type CriarTarefaRequest struct {
 	ResponsavelID int32    `json:"responsavelId" binding:"required"`
 	SituacaoID    int32    `json:"situacaoId" binding:"required"`
 	TipoID        int32    `json:"tipoId" binding:"required"`
+	InicioPrevisto *string `json:"inicioPrevisto"`
+	Prazo         *string  `json:"prazo"`
 	Anexos        []string `json:"anexos"`
 }
 
 type AtualizarTarefaRequest struct {
-	Titulo        string `json:"titulo" binding:"required"`
-	Descricao     string `json:"descricao"`
-	ProjetoID     int32  `json:"projetoId" binding:"required"`
-	ResponsavelID int32  `json:"responsavelId" binding:"required"`
-	SituacaoID    int32  `json:"situacaoId" binding:"required"`
-	TipoID        int32  `json:"tipoId" binding:"required"`
+	Titulo        string  `json:"titulo" binding:"required"`
+	Descricao     string  `json:"descricao"`
+	ProjetoID     int32   `json:"projetoId" binding:"required"`
+	ResponsavelID int32   `json:"responsavelId" binding:"required"`
+	SituacaoID    int32   `json:"situacaoId" binding:"required"`
+	TipoID        int32   `json:"tipoId" binding:"required"`
+	InicioPrevisto *string `json:"inicioPrevisto"`
+	Prazo         *string  `json:"prazo"`
 }
 
 type MoverTarefaRequest struct {
@@ -107,7 +111,7 @@ func (h *TarefaHandler) Criar(ctx *gin.Context) {
 	}
 
 	criadoPorID := middleware.GetUsuarioID(ctx)
-	tarefa, err := h.service.Criar(ctx.Request.Context(), req.Titulo, req.Descricao, req.ProjetoID, criadoPorID, req.ResponsavelID, req.SituacaoID, req.TipoID)
+	tarefa, err := h.service.Criar(ctx.Request.Context(), req.Titulo, req.Descricao, req.ProjetoID, criadoPorID, req.ResponsavelID, req.SituacaoID, req.TipoID, req.InicioPrevisto, req.Prazo)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -143,7 +147,7 @@ func (h *TarefaHandler) Atualizar(ctx *gin.Context) {
 		return
 	}
 
-	tarefa, err := h.service.Atualizar(ctx.Request.Context(), int32(id), req.Titulo, req.Descricao, req.ProjetoID, req.ResponsavelID, req.SituacaoID, req.TipoID)
+	tarefa, err := h.service.Atualizar(ctx.Request.Context(), int32(id), req.Titulo, req.Descricao, req.ProjetoID, req.ResponsavelID, req.SituacaoID, req.TipoID, req.InicioPrevisto, req.Prazo)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return

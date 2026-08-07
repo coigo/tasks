@@ -38,6 +38,8 @@ interface Tarefa {
   responsavelId: number;
   situacaoId: number;
   tipoId: number;
+  inicioPrevisto: string | null;
+  prazo: string | null;
   criadoPorNome: string;
   responsavelNome: string;
   situacaoDescricao: string;
@@ -81,6 +83,16 @@ const schema = z.object({
   responsavelId: z.string().min(1, 'Responsável é obrigatório'),
   situacaoId: z.string().min(1, 'Situação é obrigatória'),
   tipoId: z.string().min(1, 'Tipo é obrigatório'),
+  inicioPrevisto: z.string().optional(),
+  prazo: z.string().optional(),
+}).refine((data) => {
+  if (data.prazo && data.inicioPrevisto) {
+    return new Date(data.prazo) >= new Date(data.inicioPrevisto);
+  }
+  return true;
+}, {
+  message: 'Prazo deve ser maior ou igual ao início previsto',
+  path: ['prazo'],
 });
 
 type FormData = z.infer<typeof schema>;
@@ -144,6 +156,8 @@ export function TarefaDetail() {
         responsavelId: String(tarefaRes.data.responsavelId),
         situacaoId: String(tarefaRes.data.situacaoId),
         tipoId: String(tarefaRes.data.tipoId),
+        inicioPrevisto: tarefaRes.data.inicioPrevisto || '',
+        prazo: tarefaRes.data.prazo || '',
       });
     } catch {
       toast.error('Erro ao carregar tarefa');
@@ -173,7 +187,7 @@ export function TarefaDetail() {
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         titulo: data.titulo,
         descricao: data.descricao,
         projetoId: Number(data.projetoId),
@@ -181,6 +195,12 @@ export function TarefaDetail() {
         situacaoId: Number(data.situacaoId),
         tipoId: Number(data.tipoId),
       };
+      if (data.inicioPrevisto) {
+        payload.inicioPrevisto = data.inicioPrevisto;
+      }
+      if (data.prazo) {
+        payload.prazo = data.prazo;
+      }
       await atualizar(payload, `/tarefas/${tarefaId}`);
       toast.success('Tarefa atualizada');
       setIsEditing(false);
@@ -199,6 +219,8 @@ export function TarefaDetail() {
         responsavelId: String(tarefa.responsavelId),
         situacaoId: String(tarefa.situacaoId),
         tipoId: String(tarefa.tipoId),
+        inicioPrevisto: tarefa.inicioPrevisto || '',
+        prazo: tarefa.prazo || '',
       });
     }
     setIsEditing(false);
@@ -415,6 +437,22 @@ export function TarefaDetail() {
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Tipo</dt>
                   <dd className="mt-1 text-sm text-gray-900">{tarefa?.tipoDescricao}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Início Previsto</dt>
+                  <dd className="mt-1 text-sm text-gray-900">
+                    {tarefa?.inicioPrevisto
+                      ? format(new Date(tarefa.inicioPrevisto), 'dd/MM/yyyy', { locale: ptBR })
+                      : '-'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Prazo</dt>
+                  <dd className="mt-1 text-sm text-gray-900">
+                    {tarefa?.prazo
+                      ? format(new Date(tarefa.prazo), 'dd/MM/yyyy', { locale: ptBR })
+                      : '-'}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Criada por</dt>

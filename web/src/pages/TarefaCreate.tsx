@@ -31,6 +31,16 @@ const schema = z.object({
   responsavelId: z.string().min(1, 'Responsável é obrigatório'),
   situacaoId: z.string().min(1, 'Situação é obrigatória'),
   tipoId: z.string().min(1, 'Tipo é obrigatório'),
+  inicioPrevisto: z.string().optional(),
+  prazo: z.string().optional(),
+}).refine((data) => {
+  if (data.prazo && data.inicioPrevisto) {
+    return new Date(data.prazo) >= new Date(data.inicioPrevisto);
+  }
+  return true;
+}, {
+  message: 'Prazo deve ser maior ou igual ao início previsto',
+  path: ['prazo'],
 });
 
 type FormData = z.infer<typeof schema>;
@@ -75,7 +85,7 @@ export function TarefaCreate() {
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         titulo: data.titulo,
         descricao: data.descricao,
         projetoId: Number(data.projetoId),
@@ -84,6 +94,12 @@ export function TarefaCreate() {
         tipoId: Number(data.tipoId),
         anexos: arquivosTemp.map((a) => a.uuid),
       };
+      if (data.inicioPrevisto) {
+        payload.inicioPrevisto = data.inicioPrevisto;
+      }
+      if (data.prazo) {
+        payload.prazo = data.prazo;
+      }
       const response = await criar<TarefaCriada>(payload);
       toast.success('Tarefa criada');
       navigate(`/tarefas/${response.id}`);

@@ -25,6 +25,8 @@ interface Tarefa {
   responsavel_id: number;
   situacao_id: number;
   tipo_id: number;
+  inicio_previsto: string | null;
+  prazo: string | null;
   criado_por_nome: string;
   responsavel_nome: string;
   situacao_descricao: string;
@@ -67,6 +69,16 @@ const schema = z.object({
   responsavel_id: z.string().min(1, 'Responsável é obrigatório'),
   situacao_id: z.string().min(1, 'Situação é obrigatória'),
   tipo_id: z.string().min(1, 'Tipo é obrigatório'),
+  inicio_previsto: z.string().optional(),
+  prazo: z.string().optional(),
+}).refine((data) => {
+  if (data.prazo && data.inicio_previsto) {
+    return new Date(data.prazo) >= new Date(data.inicio_previsto);
+  }
+  return true;
+}, {
+  message: 'Prazo deve ser maior ou igual ao início previsto',
+  path: ['prazo'],
 });
 
    type FormData = z.infer<typeof schema>;
@@ -147,6 +159,8 @@ const schema = z.object({
           responsavel_id: String(tarefaRes.data.responsavel_id),
           situacao_id: String(tarefaRes.data.situacao_id),
           tipo_id: String(tarefaRes.data.tipo_id),
+          inicio_previsto: tarefaRes.data.inicio_previsto || '',
+          prazo: tarefaRes.data.prazo || '',
         });
       } catch {
         toast.error('Erro ao carregar tarefa'); 
@@ -159,7 +173,7 @@ const schema = z.object({
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         titulo: data.titulo,
         descricao: data.descricao,
         projeto_id: Number(data.projeto_id),
@@ -168,6 +182,12 @@ const schema = z.object({
         tipo_id: Number(data.tipo_id),
         anexos: arquivosTemp.map((a) => a.uuid),
       };
+      if (data.inicio_previsto) {
+        payload.inicio_previsto = data.inicio_previsto;
+      }
+      if (data.prazo) {
+        payload.prazo = data.prazo;
+      }
       let response;
       if (isNova) {
         response = await salvar<Tarefa>(payload);
@@ -340,6 +360,18 @@ const schema = z.object({
               options={opcoes.tipos.map((t) => ({ value: t.id, label: t.descricao }))}
               error={errors.tipo_id?.message}
               {...register('tipo_id')}
+            />
+            <FormInput
+              label="Início Previsto"
+              type="date"
+              error={errors.inicio_previsto?.message}
+              {...register('inicio_previsto')}
+            />
+            <FormInput
+              label="Prazo"
+              type="date"
+              error={errors.prazo?.message}
+              {...register('prazo')}
             />
           </div>
           <Controller

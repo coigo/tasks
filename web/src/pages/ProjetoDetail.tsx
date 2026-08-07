@@ -107,6 +107,7 @@ export function ProjetoDetail() {
         tipoDescricao: string;
         responsavelNome: string;
         projetoNome: string;
+        prazo: string | null;
       }) => ({
         id: t.id,
         numero: t.numero,
@@ -118,6 +119,7 @@ export function ProjetoDetail() {
         tipoDescricao: t.tipoDescricao,
         responsavelNome: t.responsavelNome,
         projetoNome: t.projetoNome,
+        prazo: t.prazo || null,
       }));
       setTarefas(tarefasData);
     } finally {

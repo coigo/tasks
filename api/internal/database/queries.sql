@@ -118,14 +118,16 @@ SELECT COALESCE(MAX(numero), 0) FROM tarefas WHERE ano = $1;
 -- name: CreateTarefa :one
 INSERT INTO tarefas (
     numero, ano, titulo, descricao, projeto_id,
-    criado_por_id, responsavel_id, situacao_id, tipo_id
+    criado_por_id, responsavel_id, situacao_id, tipo_id,
+    inicio_previsto, prazo
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, ultima_mov_em, criado_em, atualizado_em;
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, ultima_mov_em, criado_em, atualizado_em;
 
 -- name: GetTarefaById :one
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
+       t.inicio_previsto, t.prazo,
        t.ultima_mov_em, t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
@@ -145,6 +147,7 @@ WHERE t.id = $1 limit 1;
 -- name: ListTarefas :many
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
+       t.inicio_previsto, t.prazo,
        t.ultima_mov_em, t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
@@ -175,10 +178,12 @@ SET titulo = $2,
     responsavel_id = $5,
     situacao_id = $6,
     tipo_id = $7,
+    inicio_previsto = $8,
+    prazo = $9,
     ultima_mov_em = CURRENT_TIMESTAMP,
     atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, ultima_mov_em, criado_em, atualizado_em;
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, ultima_mov_em, criado_em, atualizado_em;
 
 -- name: UpdateSituacaoTarefa :exec
 UPDATE tarefas
@@ -260,6 +265,7 @@ DELETE FROM tarefas_anexos WHERE id = $1;
 -- name: ListTarefasMovimentadasNoPeriodo :many
 SELECT DISTINCT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
+       t.inicio_previsto, t.prazo,
        t.criado_em, t.ultima_mov_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,

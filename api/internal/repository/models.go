@@ -17,19 +17,21 @@ type Projeto struct {
 }
 
 type Tarefa struct {
-	ID            int32            `json:"id"`
-	Numero        int32            `json:"numero"`
-	Ano           int32            `json:"ano"`
-	Titulo        string           `json:"titulo"`
-	Descricao     pgtype.Text      `json:"descricao"`
-	ProjetoID     int32            `json:"projetoId"`
-	CriadoPorID   int32            `json:"criadoPorId"`
-	ResponsavelID int32            `json:"responsavelId"`
-	SituacaoID    int32            `json:"situacaoId"`
-	TipoID        int32            `json:"tipoId"`
-	CriadoEm      pgtype.Timestamp `json:"criadoEm"`
-	UltimaMovEm   pgtype.Timestamp `json:"ultimaMovEm"`
-	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
+	ID             int32            `json:"id"`
+	Numero         int32            `json:"numero"`
+	Ano            int32            `json:"ano"`
+	Titulo         string           `json:"titulo"`
+	Descricao      pgtype.Text      `json:"descricao"`
+	ProjetoID      int32            `json:"projetoId"`
+	CriadoPorID    int32            `json:"criadoPorId"`
+	ResponsavelID  int32            `json:"responsavelId"`
+	SituacaoID     int32            `json:"situacaoId"`
+	TipoID         int32            `json:"tipoId"`
+	CriadoEm       pgtype.Timestamp `json:"criadoEm"`
+	UltimaMovEm    pgtype.Timestamp `json:"ultimaMovEm"`
+	AtualizadoEm   pgtype.Timestamp `json:"atualizadoEm"`
+	InicioPrevisto pgtype.Date      `json:"inicioPrevisto"`
+	Prazo          pgtype.Date      `json:"prazo"`
 }
 
 type TarefasAnexo struct {
