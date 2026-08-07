@@ -15,21 +15,20 @@ type IProjetoRepository interface {
 
 type IUsuarioRepository interface {
 	CreateUsuario(ctx context.Context, arg repository.CreateUsuarioParams) (repository.CreateUsuarioRow, error)
-	GetUsuarioById(ctx context.Context, id int32) (repository.Usuario, error)
-	GetUsuarioByUsuario(ctx context.Context, usuario string) (repository.Usuario, error)
+	GetUsuarioById(ctx context.Context, id int32) (repository.GetUsuarioByIdRow, error)
+	GetUsuarioByUsuario(ctx context.Context, usuario string) (repository.GetUsuarioByUsuarioRow, error)
 	ListUsuarios(ctx context.Context) ([]repository.ListUsuariosRow, error)
 	UpdateUsuario(ctx context.Context, arg repository.UpdateUsuarioParams) (repository.UpdateUsuarioRow, error)
 	DeleteUsuario(ctx context.Context, id int32) error
 	UpdateUsuarioNotificacoes(ctx context.Context, arg repository.UpdateUsuarioNotificacoesParams) error
 	ListNotificacoes(ctx context.Context, id int32) ([]byte, error)
-	
 }
 
 type ITarefaSituacaoRepository interface {
-	CreateTarefaSituacao(ctx context.Context, arg repository.CreateTarefaSituacaoParams) (repository.TarefasSituaco, error)
-	GetTarefaSituacaoById(ctx context.Context, id int32) (repository.TarefasSituaco, error)
-	ListTarefaSituacoes(ctx context.Context) ([]repository.TarefasSituaco, error)
-	UpdateTarefaSituacao(ctx context.Context, arg repository.UpdateTarefaSituacaoParams) (repository.TarefasSituaco, error)
+	CreateTarefaSituacao(ctx context.Context, arg repository.CreateTarefaSituacaoParams) (repository.CreateTarefaSituacaoRow, error)
+	GetTarefaSituacaoById(ctx context.Context, id int32) (repository.GetTarefaSituacaoByIdRow, error)
+	ListTarefaSituacoes(ctx context.Context) ([]repository.ListTarefaSituacoesRow, error)
+	UpdateTarefaSituacao(ctx context.Context, arg repository.UpdateTarefaSituacaoParams) (repository.UpdateTarefaSituacaoRow, error)
 	DeleteTarefaSituacao(ctx context.Context, id int32) error
 }
 
@@ -42,10 +41,10 @@ type ITarefaTipoRepository interface {
 }
 
 type ITarefaRepository interface {
-	CreateTarefa(ctx context.Context, arg repository.CreateTarefaParams) (repository.Tarefa, error)
+	CreateTarefa(ctx context.Context, arg repository.CreateTarefaParams) (repository.CreateTarefaRow, error)
 	GetTarefaById(ctx context.Context, id int32) (repository.GetTarefaByIdRow, error)
 	ListTarefas(ctx context.Context, arg repository.ListTarefasParams) ([]repository.ListTarefasRow, error)
-	UpdateTarefa(ctx context.Context, arg repository.UpdateTarefaParams) (repository.Tarefa, error)
+	UpdateTarefa(ctx context.Context, arg repository.UpdateTarefaParams) (repository.UpdateTarefaRow, error)
 	UpdateSituacaoTarefa(ctx context.Context, arg repository.UpdateSituacaoTarefaParams) error
 	DeleteTarefa(ctx context.Context, id int32) error
 	GetMaxNumeroTarefaByAno(ctx context.Context, ano int32) (interface{}, error)
@@ -53,6 +52,9 @@ type ITarefaRepository interface {
 	CountTarefasByTipo(ctx context.Context) ([]repository.CountTarefasByTipoRow, error)
 	CountTarefasResponsavel(ctx context.Context) ([]repository.CountTarefasResponsavelRow, error)
 	ListTarefasMovimentadasNoPeriodo(ctx context.Context, arg repository.ListTarefasMovimentadasNoPeriodoParams) ([]repository.ListTarefasMovimentadasNoPeriodoRow, error)
+	CountProjetosCriadosNoPeriodo(ctx context.Context, arg repository.CountProjetosCriadosNoPeriodoParams) (int64, error)
+	CountTarefasAbertasNoPeriodo(ctx context.Context, arg repository.CountTarefasAbertasNoPeriodoParams) (int64, error)
+	CountTarefasEncerradasNoPeriodo(ctx context.Context, arg repository.CountTarefasEncerradasNoPeriodoParams) (int64, error)
 }
 
 type ITarefaMovimentacaoRepository interface {

@@ -11,6 +11,45 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countProjetosCriadosNoPeriodo = `-- name: CountProjetosCriadosNoPeriodo :one
+SELECT COUNT(*) AS total
+FROM projetos
+WHERE deletado_em IS NULL
+  AND criado_em BETWEEN $1 AND $2
+`
+
+type CountProjetosCriadosNoPeriodoParams struct {
+	DataInicio pgtype.Timestamp `json:"dataInicio"`
+	DataFim    pgtype.Timestamp `json:"dataFim"`
+}
+
+func (q *Queries) CountProjetosCriadosNoPeriodo(ctx context.Context, arg CountProjetosCriadosNoPeriodoParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countProjetosCriadosNoPeriodo, arg.DataInicio, arg.DataFim)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
+const countTarefasAbertasNoPeriodo = `-- name: CountTarefasAbertasNoPeriodo :one
+SELECT COUNT(*) AS total
+FROM tarefas t
+JOIN tarefas_situacoes s ON s.id = t.situacao_id
+WHERE t.criado_em BETWEEN $1 AND $2
+  AND s.encerra_tarefa = false
+`
+
+type CountTarefasAbertasNoPeriodoParams struct {
+	DataInicio pgtype.Timestamp `json:"dataInicio"`
+	DataFim    pgtype.Timestamp `json:"dataFim"`
+}
+
+func (q *Queries) CountTarefasAbertasNoPeriodo(ctx context.Context, arg CountTarefasAbertasNoPeriodoParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countTarefasAbertasNoPeriodo, arg.DataInicio, arg.DataFim)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
 const countTarefasBySituacao = `-- name: CountTarefasBySituacao :many
 SELECT s.id, s.descricao, s.encerra_tarefa, s.cor, COUNT(t.id) AS total
 FROM tarefas_situacoes s
@@ -23,7 +62,7 @@ type CountTarefasBySituacaoRow struct {
 	ID            int32       `json:"id"`
 	Descricao     string      `json:"descricao"`
 	EncerraTarefa pgtype.Bool `json:"encerraTarefa"`
-	Cor           string      `json:"cor"`
+	Cor           pgtype.Text `json:"cor"`
 	Total         int64       `json:"total"`
 }
 
@@ -85,6 +124,26 @@ func (q *Queries) CountTarefasByTipo(ctx context.Context) ([]CountTarefasByTipoR
 		return nil, err
 	}
 	return items, nil
+}
+
+const countTarefasEncerradasNoPeriodo = `-- name: CountTarefasEncerradasNoPeriodo :one
+SELECT COUNT(*) AS total
+FROM tarefas t
+JOIN tarefas_situacoes s ON s.id = t.situacao_id
+WHERE t.atualizado_em BETWEEN $1 AND $2
+  AND s.encerra_tarefa = true
+`
+
+type CountTarefasEncerradasNoPeriodoParams struct {
+	DataInicio pgtype.Timestamp `json:"dataInicio"`
+	DataFim    pgtype.Timestamp `json:"dataFim"`
+}
+
+func (q *Queries) CountTarefasEncerradasNoPeriodo(ctx context.Context, arg CountTarefasEncerradasNoPeriodoParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countTarefasEncerradasNoPeriodo, arg.DataInicio, arg.DataFim)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
 }
 
 const countTarefasResponsavel = `-- name: CountTarefasResponsavel :many
@@ -177,7 +236,7 @@ type CreateTarefaRow struct {
 	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
 }
 
-func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Tarefa, error) {
+func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (CreateTarefaRow, error) {
 	row := q.db.QueryRow(ctx, createTarefa,
 		arg.Numero,
 		arg.Ano,
@@ -189,7 +248,7 @@ func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Tar
 		arg.SituacaoID,
 		arg.TipoID,
 	)
-	var i Tarefa
+	var i CreateTarefaRow
 	err := row.Scan(
 		&i.ID,
 		&i.Numero,
@@ -286,12 +345,21 @@ RETURNING id, descricao, encerra_tarefa, cor, criado_em, atualizado_em
 type CreateTarefaSituacaoParams struct {
 	Descricao     string      `json:"descricao"`
 	EncerraTarefa pgtype.Bool `json:"encerraTarefa"`
-	Cor           string      `json:"cor"`
+	Cor           string 	  `json:"cor"`
 }
 
-func (q *Queries) CreateTarefaSituacao(ctx context.Context, arg CreateTarefaSituacaoParams) (TarefasSituaco, error) {
+type CreateTarefaSituacaoRow struct {
+	ID            int32            `json:"id"`
+	Descricao     string           `json:"descricao"`
+	EncerraTarefa pgtype.Bool      `json:"encerraTarefa"`
+	Cor           pgtype.Text      `json:"cor"`
+	CriadoEm      pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
+}
+
+func (q *Queries) CreateTarefaSituacao(ctx context.Context, arg CreateTarefaSituacaoParams) (CreateTarefaSituacaoRow, error) {
 	row := q.db.QueryRow(ctx, createTarefaSituacao, arg.Descricao, arg.EncerraTarefa, arg.Cor)
-	var i TarefasSituaco
+	var i CreateTarefaSituacaoRow
 	err := row.Scan(
 		&i.ID,
 		&i.Descricao,
@@ -328,15 +396,15 @@ RETURNING id, nome, usuario, criado_em, atualizado_em
 `
 
 type CreateUsuarioParams struct {
-	Nome  string `json:"nome"`
+	Nome    string `json:"nome"`
 	Usuario string `json:"usuario"`
-	Senha string `json:"senha"`
+	Senha   string `json:"senha"`
 }
 
 type CreateUsuarioRow struct {
 	ID           int32            `json:"id"`
 	Nome         string           `json:"nome"`
-	Usuario        string           `json:"usuario"`
+	Usuario      string           `json:"usuario"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
 }
@@ -509,7 +577,7 @@ type GetTarefaByIdRow struct {
 	ResponsavelNome       string           `json:"responsavelNome"`
 	SituacaoDescricao     string           `json:"situacaoDescricao"`
 	SituacaoEncerraTarefa pgtype.Bool      `json:"situacaoEncerraTarefa"`
-	SituacaoCor           string           `json:"situacaoCor"`
+	SituacaoCor           pgtype.Text      `json:"situacaoCor"`
 	TipoDescricao         string           `json:"tipoDescricao"`
 }
 
@@ -566,9 +634,18 @@ SELECT id, descricao, encerra_tarefa, cor, criado_em, atualizado_em FROM tarefas
 WHERE id = $1 limit 1
 `
 
-func (q *Queries) GetTarefaSituacaoById(ctx context.Context, id int32) (TarefasSituaco, error) {
+type GetTarefaSituacaoByIdRow struct {
+	ID            int32            `json:"id"`
+	Descricao     string           `json:"descricao"`
+	EncerraTarefa pgtype.Bool      `json:"encerraTarefa"`
+	Cor           pgtype.Text      `json:"cor"`
+	CriadoEm      pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
+}
+
+func (q *Queries) GetTarefaSituacaoById(ctx context.Context, id int32) (GetTarefaSituacaoByIdRow, error) {
 	row := q.db.QueryRow(ctx, getTarefaSituacaoById, id)
-	var i TarefasSituaco
+	var i GetTarefaSituacaoByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.Descricao,
@@ -597,34 +674,6 @@ func (q *Queries) GetTarefaTipoById(ctx context.Context, id int32) (TarefasTipo,
 	return i, err
 }
 
-const getUsuarioByUsuario = `-- name: GetUsuarioByUsuario :one
-SELECT id, nome, usuario, senha, criado_em, atualizado_em FROM usuarios
-WHERE usuario = $1 limit 1
-`
-
-type GetUsuarioByUsuarioRow struct {
-	ID           int32            `json:"id"`
-	Nome         string           `json:"nome"`
-	Usuario        string           `json:"usuario"`
-	Senha        string           `json:"senha"`
-	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
-	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
-}
-
-func (q *Queries) GetUsuarioByUsuario(ctx context.Context, usuario string) (Usuario, error) {
-	row := q.db.QueryRow(ctx, getUsuarioByUsuario, usuario)
-	var i Usuario
-	err := row.Scan(
-		&i.ID,
-		&i.Nome,
-		&i.Usuario,
-		&i.Senha,
-		&i.CriadoEm,
-		&i.AtualizadoEm,
-	)
-	return i, err
-}
-
 const getUsuarioById = `-- name: GetUsuarioById :one
 SELECT id, nome, usuario, notificacoes, senha, criado_em, atualizado_em FROM usuarios
 WHERE id = $1 limit 1
@@ -633,21 +682,49 @@ WHERE id = $1 limit 1
 type GetUsuarioByIdRow struct {
 	ID           int32            `json:"id"`
 	Nome         string           `json:"nome"`
-	Usuario        string           `json:"usuario"`
+	Usuario      string           `json:"usuario"`
 	Notificacoes []byte           `json:"notificacoes"`
 	Senha        string           `json:"senha"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
 }
 
-func (q *Queries) GetUsuarioById(ctx context.Context, id int32) (Usuario, error) {
+func (q *Queries) GetUsuarioById(ctx context.Context, id int32) (GetUsuarioByIdRow, error) {
 	row := q.db.QueryRow(ctx, getUsuarioById, id)
-	var i Usuario
+	var i GetUsuarioByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.Nome,
 		&i.Usuario,
 		&i.Notificacoes,
+		&i.Senha,
+		&i.CriadoEm,
+		&i.AtualizadoEm,
+	)
+	return i, err
+}
+
+const getUsuarioByUsuario = `-- name: GetUsuarioByUsuario :one
+SELECT id, nome, usuario, senha, criado_em, atualizado_em FROM usuarios
+WHERE usuario = $1 limit 1
+`
+
+type GetUsuarioByUsuarioRow struct {
+	ID           int32            `json:"id"`
+	Nome         string           `json:"nome"`
+	Usuario      string           `json:"usuario"`
+	Senha        string           `json:"senha"`
+	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+}
+
+func (q *Queries) GetUsuarioByUsuario(ctx context.Context, usuario string) (GetUsuarioByUsuarioRow, error) {
+	row := q.db.QueryRow(ctx, getUsuarioByUsuario, usuario)
+	var i GetUsuarioByUsuarioRow
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Usuario,
 		&i.Senha,
 		&i.CriadoEm,
 		&i.AtualizadoEm,
@@ -793,15 +870,24 @@ SELECT id, descricao, encerra_tarefa, cor, criado_em, atualizado_em FROM tarefas
 ORDER BY descricao
 `
 
-func (q *Queries) ListTarefaSituacoes(ctx context.Context) ([]TarefasSituaco, error) {
+type ListTarefaSituacoesRow struct {
+	ID            int32            `json:"id"`
+	Descricao     string           `json:"descricao"`
+	EncerraTarefa pgtype.Bool      `json:"encerraTarefa"`
+	Cor           pgtype.Text      `json:"cor"`
+	CriadoEm      pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
+}
+
+func (q *Queries) ListTarefaSituacoes(ctx context.Context) ([]ListTarefaSituacoesRow, error) {
 	rows, err := q.db.Query(ctx, listTarefaSituacoes)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []TarefasSituaco
+	var items []ListTarefaSituacoesRow
 	for rows.Next() {
-		var i TarefasSituaco
+		var i ListTarefaSituacoesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Descricao,
@@ -904,7 +990,7 @@ type ListTarefasRow struct {
 	ResponsavelNome       string           `json:"responsavelNome"`
 	SituacaoDescricao     string           `json:"situacaoDescricao"`
 	SituacaoEncerraTarefa pgtype.Bool      `json:"situacaoEncerraTarefa"`
-	SituacaoCor           string           `json:"situacaoCor"`
+	SituacaoCor           pgtype.Text      `json:"situacaoCor"`
 	TipoDescricao         string           `json:"tipoDescricao"`
 }
 
@@ -965,6 +1051,7 @@ SELECT DISTINCT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        u_resp.nome AS responsavel_nome,
        s.descricao AS situacao_descricao,
        s.encerra_tarefa AS situacao_encerra_tarefa,
+       s.cor AS situacao_cor,
        tp.descricao AS tipo_descricao
 FROM tarefas t
 JOIN projetos p ON p.id = t.projeto_id
@@ -1003,7 +1090,7 @@ type ListTarefasMovimentadasNoPeriodoRow struct {
 	ResponsavelNome       string           `json:"responsavelNome"`
 	SituacaoDescricao     string           `json:"situacaoDescricao"`
 	SituacaoEncerraTarefa pgtype.Bool      `json:"situacaoEncerraTarefa"`
-	SituacaoCor           string           `json:"situacaoCor"`
+	SituacaoCor           pgtype.Text      `json:"situacaoCor"`
 	TipoDescricao         string           `json:"tipoDescricao"`
 }
 
@@ -1056,7 +1143,7 @@ ORDER BY nome
 type ListUsuariosRow struct {
 	ID           int32            `json:"id"`
 	Nome         string           `json:"nome"`
-	Usuario        string           `json:"usuario"`
+	Usuario      string           `json:"usuario"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
 }
@@ -1171,7 +1258,7 @@ type UpdateTarefaRow struct {
 	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
 }
 
-func (q *Queries) UpdateTarefa(ctx context.Context, arg UpdateTarefaParams) (Tarefa, error) {
+func (q *Queries) UpdateTarefa(ctx context.Context, arg UpdateTarefaParams) (UpdateTarefaRow, error) {
 	row := q.db.QueryRow(ctx, updateTarefa,
 		arg.ID,
 		arg.Titulo,
@@ -1181,7 +1268,7 @@ func (q *Queries) UpdateTarefa(ctx context.Context, arg UpdateTarefaParams) (Tar
 		arg.SituacaoID,
 		arg.TipoID,
 	)
-	var i Tarefa
+	var i UpdateTarefaRow
 	err := row.Scan(
 		&i.ID,
 		&i.Numero,
@@ -1242,12 +1329,26 @@ type UpdateTarefaSituacaoParams struct {
 	ID            int32       `json:"id"`
 	Descricao     string      `json:"descricao"`
 	EncerraTarefa pgtype.Bool `json:"encerraTarefa"`
-	Cor           string      `json:"cor"`
+	Cor           string 	  `json:"cor"`
 }
 
-func (q *Queries) UpdateTarefaSituacao(ctx context.Context, arg UpdateTarefaSituacaoParams) (TarefasSituaco, error) {
-	row := q.db.QueryRow(ctx, updateTarefaSituacao, arg.ID, arg.Descricao, arg.EncerraTarefa, arg.Cor)
-	var i TarefasSituaco
+type UpdateTarefaSituacaoRow struct {
+	ID            int32            `json:"id"`
+	Descricao     string           `json:"descricao"`
+	EncerraTarefa pgtype.Bool      `json:"encerraTarefa"`
+	Cor           pgtype.Text      `json:"cor"`
+	CriadoEm      pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
+}
+
+func (q *Queries) UpdateTarefaSituacao(ctx context.Context, arg UpdateTarefaSituacaoParams) (UpdateTarefaSituacaoRow, error) {
+	row := q.db.QueryRow(ctx, updateTarefaSituacao,
+		arg.ID,
+		arg.Descricao,
+		arg.EncerraTarefa,
+		arg.Cor,
+	)
+	var i UpdateTarefaSituacaoRow
 	err := row.Scan(
 		&i.ID,
 		&i.Descricao,
@@ -1295,16 +1396,16 @@ RETURNING id, nome, usuario, criado_em, atualizado_em
 `
 
 type UpdateUsuarioParams struct {
-	Nome  string      `json:"nome"`
+	Nome    string      `json:"nome"`
 	Usuario string      `json:"usuario"`
-	Senha interface{} `json:"senha"`
-	ID    int32       `json:"id"`
+	Senha   interface{} `json:"senha"`
+	ID      int32       `json:"id"`
 }
 
 type UpdateUsuarioRow struct {
 	ID           int32            `json:"id"`
 	Nome         string           `json:"nome"`
-	Usuario        string           `json:"usuario"`
+	Usuario      string           `json:"usuario"`
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
 }

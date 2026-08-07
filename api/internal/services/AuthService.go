@@ -55,7 +55,7 @@ func (s *AuthService) VerificarSenha(senha, hash string) bool {
 	return err == nil
 }
 
-func (s *AuthService) Login(ctx context.Context, usuario, senha string) (*Tokens, *repository.Usuario, error) {
+func (s *AuthService) Login(ctx context.Context, usuario, senha string) (*Tokens, *repository.GetUsuarioByUsuarioRow, error) {
 	usuarioReg, err := s.usuarioRepository.GetUsuarioByUsuario(ctx, usuario)
 	if err != nil {
 		return nil, nil, errors.New("credenciais invalidas")

@@ -278,3 +278,23 @@ JOIN tarefas_movimentacoes m ON m.tarefa_id = t.id
 WHERE m.criado_em BETWEEN sqlc.arg(data_inicio) AND sqlc.arg(data_fim)
   AND (sqlc.arg(responsavel_id) = 0 OR t.responsavel_id = sqlc.arg(responsavel_id))
 ORDER BY t.ultima_mov_em DESC;
+
+-- name: CountProjetosCriadosNoPeriodo :one
+SELECT COUNT(*) AS total
+FROM projetos
+WHERE deletado_em IS NULL
+  AND criado_em BETWEEN sqlc.arg(data_inicio) AND sqlc.arg(data_fim);
+
+-- name: CountTarefasAbertasNoPeriodo :one
+SELECT COUNT(*) AS total
+FROM tarefas t
+JOIN tarefas_situacoes s ON s.id = t.situacao_id
+WHERE t.criado_em BETWEEN sqlc.arg(data_inicio) AND sqlc.arg(data_fim)
+  AND s.encerra_tarefa = false;
+
+-- name: CountTarefasEncerradasNoPeriodo :one
+SELECT COUNT(*) AS total
+FROM tarefas t
+JOIN tarefas_situacoes s ON s.id = t.situacao_id
+WHERE t.atualizado_em BETWEEN sqlc.arg(data_inicio) AND sqlc.arg(data_fim)
+  AND s.encerra_tarefa = true;

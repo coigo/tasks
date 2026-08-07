@@ -56,10 +56,10 @@ type TarefasMovimentaco struct {
 type TarefasSituaco struct {
 	ID            int32            `json:"id"`
 	Descricao     string           `json:"descricao"`
-	EncerraTarefa pgtype.Bool     `json:"encerraTarefa"`
-	Cor           string           `json:"cor"`
+	EncerraTarefa pgtype.Bool      `json:"encerraTarefa"`
 	CriadoEm      pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
+	Cor           pgtype.Text      `json:"cor"`
 }
 
 type TarefasTipo struct {

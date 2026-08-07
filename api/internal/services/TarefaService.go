@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"tasks/internal/repository"
 	"tasks/internal/repository/ports"
-	"tasks/internal/utils"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -19,7 +18,7 @@ func NewTarefaService(repo ports.ITarefaRepository) *TarefaService {
 	return &TarefaService{tarefaRepository: repo}
 }
 
-func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, projetoID, criadoPorID, responsavelID, situacaoID, tipoID int32) (*repository.Tarefa, error) {
+func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, projetoID, criadoPorID, responsavelID, situacaoID, tipoID int32) (*repository.CreateTarefaRow, error) {
 	if titulo == "" {
 		return nil, fmt.Errorf("titulo e obrigatorio")
 	}
@@ -80,7 +79,7 @@ func (s *TarefaService) Listar(ctx context.Context, responsavelID, situacaoID, t
 	return s.tarefaRepository.ListTarefas(ctx, params)
 }
 
-func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descricao string, projetoID, responsavelID, situacaoID, tipoID int32) (*repository.Tarefa, error) {
+func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descricao string, projetoID, responsavelID, situacaoID, tipoID int32) (*repository.UpdateTarefaRow, error) {
 	if titulo == "" {
 		return nil, fmt.Errorf("titulo e obrigatorio")
 	}
@@ -114,24 +113,35 @@ func (s *TarefaService) Mover(ctx context.Context, tarefaID, novaSituacaoID int3
 	return nil
 }
 
-func (s *TarefaService) Metricas(ctx context.Context) (map[string]interface{}, error) {
-	porSituacao, err := s.tarefaRepository.CountTarefasBySituacao(ctx)
+func (s *TarefaService) Metricas(ctx context.Context, dataInicio, dataFim time.Time) (map[string]interface{}, error) {
+	totalProjetos, err := s.tarefaRepository.CountProjetosCriadosNoPeriodo(ctx, repository.CountProjetosCriadosNoPeriodoParams{
+		DataInicio: pgtype.Timestamp{Time: dataInicio, Valid: true},
+		DataFim:    pgtype.Timestamp{Time: dataFim, Valid: true},
+	})
 	if err != nil {
 		return nil, err
 	}
-	porTipo, err := s.tarefaRepository.CountTarefasByTipo(ctx)
+
+	tarefasAbertas, err := s.tarefaRepository.CountTarefasAbertasNoPeriodo(ctx, repository.CountTarefasAbertasNoPeriodoParams{
+		DataInicio: pgtype.Timestamp{Time: dataInicio, Valid: true},
+		DataFim:    pgtype.Timestamp{Time: dataFim, Valid: true},
+	})
 	if err != nil {
 		return nil, err
 	}
-	porResponsavel, err := s.tarefaRepository.CountTarefasResponsavel(ctx)
+
+	tarefasEncerradas, err := s.tarefaRepository.CountTarefasEncerradasNoPeriodo(ctx, repository.CountTarefasEncerradasNoPeriodoParams{
+		DataInicio: pgtype.Timestamp{Time: dataInicio, Valid: true},
+		DataFim:    pgtype.Timestamp{Time: dataFim, Valid: true},
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	return map[string]interface{}{
-		"por_situacao":    utils.EnsureList(porSituacao),
-		"por_tipo":        utils.EnsureList(porTipo),
-		"por_responsavel": utils.EnsureList(porResponsavel),
+		"total_projetos":     totalProjetos,
+		"tarefas_abertas":    tarefasAbertas,
+		"tarefas_encerradas": tarefasEncerradas,
 	}, nil
 }
 

@@ -81,7 +81,7 @@ func (s *UsuarioService) Criar(ctx context.Context, nome, usuario, senha string)
 	return &usuarioReg, nil
 }
 
-func (s *UsuarioService) BuscarPorId(ctx context.Context, id int32) (*repository.Usuario, error) {
+func (s *UsuarioService) BuscarPorId(ctx context.Context, id int32) (*repository.GetUsuarioByIdRow, error) {
 	usuario, err := s.usuarioRepository.GetUsuarioById(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("usuario nao encontrado: %w", err)

@@ -17,7 +17,7 @@ func NewTarefaSituacaoService(repo ports.ITarefaSituacaoRepository) *TarefaSitua
 	return &TarefaSituacaoService{repository: repo}
 }
 
-func (s *TarefaSituacaoService) Criar(ctx context.Context, descricao string, encerraTarefa bool, cor string) (*repository.TarefasSituaco, error) {
+func (s *TarefaSituacaoService) Criar(ctx context.Context, descricao string, encerraTarefa bool, cor string) (*repository.CreateTarefaSituacaoRow, error) {
 	if descricao == "" {
 		return nil, fmt.Errorf("descricao e obrigatoria")
 	}
@@ -35,7 +35,7 @@ func (s *TarefaSituacaoService) Criar(ctx context.Context, descricao string, enc
 	return &situacao, nil
 }
 
-func (s *TarefaSituacaoService) BuscarPorId(ctx context.Context, id int32) (*repository.TarefasSituaco, error) {
+func (s *TarefaSituacaoService) BuscarPorId(ctx context.Context, id int32) (*repository.GetTarefaSituacaoByIdRow, error) {
 	situacao, err := s.repository.GetTarefaSituacaoById(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("situacao nao encontrada: %w", err)
@@ -43,11 +43,11 @@ func (s *TarefaSituacaoService) BuscarPorId(ctx context.Context, id int32) (*rep
 	return &situacao, nil
 }
 
-func (s *TarefaSituacaoService) Listar(ctx context.Context) ([]repository.TarefasSituaco, error) {
+func (s *TarefaSituacaoService) Listar(ctx context.Context) ([]repository.ListTarefaSituacoesRow, error) {
 	return s.repository.ListTarefaSituacoes(ctx)
 }
 
-func (s *TarefaSituacaoService) Atualizar(ctx context.Context, id int32, descricao string, encerraTarefa bool, cor string) (*repository.TarefasSituaco, error) {
+func (s *TarefaSituacaoService) Atualizar(ctx context.Context, id int32, descricao string, encerraTarefa bool, cor string) (*repository.UpdateTarefaSituacaoRow, error) {
 	if descricao == "" {
 		return nil, fmt.Errorf("descricao e obrigatoria")
 	}
