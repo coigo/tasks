@@ -11,6 +11,7 @@ import { TarefaSituacoes } from '../pages/TarefaSituacoes';
 import { TarefaTipos } from '../pages/TarefaTipos';
 import { Usuarios } from '../pages/Usuarios';
 import { Relatorios } from '../pages/Relatorios';
+import { ProjetoDetail } from '../pages/ProjetoDetail';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoading } = useAuth();
@@ -49,6 +50,7 @@ export function Router() {
           <Route path="tarefas/nova" element={<TarefaCreate />} />
           <Route path="tarefas/:id" element={<TarefaDetail />} />
           <Route path="projetos" element={<Projetos />} />
+          <Route path="projetos/:id" element={<ProjetoDetail />} />
           <Route path="situacoes" element={<TarefaSituacoes />} />
           <Route path="tipos" element={<TarefaTipos />} />
           <Route path="usuarios" element={<Usuarios />} />

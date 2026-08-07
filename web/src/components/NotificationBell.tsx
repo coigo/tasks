@@ -9,7 +9,7 @@ export function NotificationBell() {
   const { notifications, unreadCount, isLoading, lerNotificacao } = useNotifications();
 
    const onClickNotificacao = async (notificacaoId: number, lido: boolean) => {
-      if (lido) {
+      if (!lido) {
          lerNotificacao(notificacaoId)      
       } 
       setIsOpen(false)

@@ -46,12 +46,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
    }, []);
 
    const lerNotificacao = async (notificacaoId: number) => {
+      await api.put(`/usuarios/notificacoes/${notificacaoId}`)
       setNotifications(prev =>
          prev.map(item =>
             item.id === notificacaoId ? { ...item, lido: true } : item
          )
       );
-      await api.put(`/usuarios/notificacoes/${notificacaoId}`)
    }
    
   const unreadCount = notifications.filter((n) => !n.lido).length;

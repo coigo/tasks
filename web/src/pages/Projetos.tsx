@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Link } from 'react-router-dom';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { FormInput } from '../components/FormInput';
 import { useApiData, useMutate } from '../hooks/useApi';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, ListTodo } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Projeto {
@@ -121,6 +122,11 @@ export function Projetos() {
               >
                 <span className="font-medium text-gray-900">{projeto.nome}</span>
                 <div className="flex gap-2">
+                  <Link to={`/projetos/${projeto.id}`}>
+                    <Button size="sm" variant="ghost" title="Ver tarefas">
+                      <ListTodo size={16} />
+                    </Button>
+                  </Link>
                   <Button
                     size="sm"
                     variant="ghost"
