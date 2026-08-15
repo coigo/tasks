@@ -18,7 +18,7 @@ func NewTarefaService(repo ports.ITarefaRepository) *TarefaService {
 	return &TarefaService{tarefaRepository: repo}
 }
 
-func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, projetoID, criadoPorID, responsavelID, situacaoID, tipoID int32, inicioPrevisto, prazo *string) (*repository.CreateTarefaRow, error) {
+func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, projetoID, criadoPorID, responsavelID, situacaoID, tipoID int32, inicioPrevisto, prazo *string, tarefaPaiID *int32) (*repository.CreateTarefaRow, error) {
 	if titulo == "" {
 		return nil, fmt.Errorf("titulo e obrigatorio")
 	}
@@ -28,6 +28,16 @@ func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, pro
 		inicioDate, _ := time.Parse("2006-01-02", *inicioPrevisto)
 		if prazoDate.Before(inicioDate) {
 			return nil, fmt.Errorf("prazo deve ser maior ou igual ao inicio previsto")
+		}
+	}
+
+	if tarefaPaiID != nil && *tarefaPaiID <= 0 {
+		tarefaPaiID = nil
+	}
+
+	if tarefaPaiID != nil {
+		if _, err := s.tarefaRepository.GetTarefaById(ctx, *tarefaPaiID); err != nil {
+			return nil, fmt.Errorf("tarefa pai nao encontrada")
 		}
 	}
 
@@ -66,18 +76,24 @@ func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, pro
 		}
 	}
 
+	var tarefaPaiParam pgtype.Int4
+	if tarefaPaiID != nil {
+		tarefaPaiParam = pgtype.Int4{Int32: *tarefaPaiID, Valid: true}
+	}
+
 	tarefa, err := s.tarefaRepository.CreateTarefa(ctx, repository.CreateTarefaParams{
-		Numero:        numero,
-		Ano:           ano,
-		Titulo:        titulo,
-		Descricao:     descricaoText,
-		ProjetoID:     projetoID,
-		CriadoPorID:   criadoPorID,
-		ResponsavelID: responsavelID,
-		SituacaoID:    situacaoID,
-		TipoID:        tipoID,
+		Numero:         numero,
+		Ano:            ano,
+		Titulo:         titulo,
+		Descricao:      descricaoText,
+		ProjetoID:      projetoID,
+		CriadoPorID:    criadoPorID,
+		ResponsavelID:  responsavelID,
+		SituacaoID:     situacaoID,
+		TipoID:         tipoID,
 		InicioPrevisto: inicioPrevistoDate,
-		Prazo:         prazoDate,
+		Prazo:          prazoDate,
+		TarefaPaiID:    tarefaPaiParam,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar tarefa: %w", err)
@@ -105,7 +121,11 @@ func (s *TarefaService) Listar(ctx context.Context, responsavelID, situacaoID, t
 	return s.tarefaRepository.ListTarefas(ctx, params)
 }
 
-func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descricao string, projetoID, responsavelID, situacaoID, tipoID int32, inicioPrevisto, prazo *string) (*repository.UpdateTarefaRow, error) {
+func (s *TarefaService) ListarSubtarefas(ctx context.Context, tarefaPaiID int32) ([]repository.ListSubtarefasByTarefaPaiRow, error) {
+	return s.tarefaRepository.ListSubtarefasByTarefaPai(ctx, pgtype.Int4{Int32: tarefaPaiID, Valid: true})
+}
+
+func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descricao string, projetoID, responsavelID, situacaoID, tipoID int32, inicioPrevisto, prazo *string, tarefaPaiID *int32) (*repository.UpdateTarefaRow, error) {
 	if titulo == "" {
 		return nil, fmt.Errorf("titulo e obrigatorio")
 	}
@@ -115,6 +135,19 @@ func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descric
 		inicioDate, _ := time.Parse("2006-01-02", *inicioPrevisto)
 		if prazoDate.Before(inicioDate) {
 			return nil, fmt.Errorf("prazo deve ser maior ou igual ao inicio previsto")
+		}
+	}
+
+	if tarefaPaiID != nil && *tarefaPaiID <= 0 {
+		tarefaPaiID = nil
+	}
+
+	if tarefaPaiID != nil {
+		if *tarefaPaiID == id {
+			return nil, fmt.Errorf("tarefa nao pode ser pai dela mesma")
+		}
+		if err := s.validarCiclo(ctx, id, *tarefaPaiID); err != nil {
+			return nil, err
 		}
 	}
 
@@ -134,16 +167,22 @@ func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descric
 		}
 	}
 
+	var tarefaPaiParam pgtype.Int4
+	if tarefaPaiID != nil {
+		tarefaPaiParam = pgtype.Int4{Int32: *tarefaPaiID, Valid: true}
+	}
+
 	tarefa, err := s.tarefaRepository.UpdateTarefa(ctx, repository.UpdateTarefaParams{
-		ID:            id,
-		Titulo:        titulo,
-		Descricao:     pgtype.Text{String: descricao, Valid: descricao != ""},
-		ProjetoID:     projetoID,
-		ResponsavelID: responsavelID,
-		SituacaoID:    situacaoID,
-		TipoID:        tipoID,
+		ID:             id,
+		Titulo:         titulo,
+		Descricao:      pgtype.Text{String: descricao, Valid: descricao != ""},
+		ProjetoID:      projetoID,
+		ResponsavelID:  responsavelID,
+		SituacaoID:     situacaoID,
+		TipoID:         tipoID,
 		InicioPrevisto: inicioPrevistoDate,
-		Prazo:         prazoDate,
+		Prazo:          prazoDate,
+		TarefaPaiID:    tarefaPaiParam,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao atualizar tarefa: %w", err)
@@ -161,6 +200,29 @@ func (s *TarefaService) Mover(ctx context.Context, tarefaID, novaSituacaoID int3
 		SituacaoID: novaSituacaoID,
 	}); err != nil {
 		return fmt.Errorf("erro ao mover tarefa: %w", err)
+	}
+	return nil
+}
+
+func (s *TarefaService) validarCiclo(ctx context.Context, tarefaID, novoPaiID int32) error {
+	atual := novoPaiID
+	visitados := map[int32]bool{}
+	for atual > 0 {
+		if visitados[atual] {
+			return fmt.Errorf("ciclo detectado na hierarquia de tarefas")
+		}
+		visitados[atual] = true
+		if atual == tarefaID {
+			return fmt.Errorf("tarefa nao pode ser filha de sua propria descendencia")
+		}
+		pai, err := s.tarefaRepository.GetTarefaById(ctx, atual)
+		if err != nil {
+			return fmt.Errorf("erro ao validar hierarquia: %w", err)
+		}
+		if !pai.TarefaPaiID.Valid {
+			return nil
+		}
+		atual = pai.TarefaPaiID.Int32
 	}
 	return nil
 }
@@ -196,4 +258,3 @@ func (s *TarefaService) Metricas(ctx context.Context, dataInicio, dataFim time.T
 		"tarefas_encerradas": tarefasEncerradas,
 	}, nil
 }
-

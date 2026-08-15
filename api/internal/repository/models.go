@@ -32,6 +32,7 @@ type Tarefa struct {
 	AtualizadoEm   pgtype.Timestamp `json:"atualizadoEm"`
 	InicioPrevisto pgtype.Date      `json:"inicioPrevisto"`
 	Prazo          pgtype.Date      `json:"prazo"`
+	TarefaPaiID    pgtype.Int4      `json:"tarefaPaiId"`
 }
 
 type TarefasAnexo struct {

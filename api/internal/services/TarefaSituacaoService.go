@@ -27,7 +27,7 @@ func (s *TarefaSituacaoService) Criar(ctx context.Context, descricao string, enc
 	situacao, err := s.repository.CreateTarefaSituacao(ctx, repository.CreateTarefaSituacaoParams{
 		Descricao:     descricao,
 		EncerraTarefa: pgtype.Bool{Bool: encerraTarefa, Valid: true},
-		Cor:           cor,
+		Cor:           pgtype.Text{String: cor, Valid: cor != ""},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar situacao: %w", err)
@@ -55,7 +55,7 @@ func (s *TarefaSituacaoService) Atualizar(ctx context.Context, id int32, descric
 		ID:            id,
 		Descricao:     descricao,
 		EncerraTarefa: pgtype.Bool{Bool: encerraTarefa, Valid: true},
-		Cor:           cor,
+		Cor:           pgtype.Text{String: cor, Valid: cor != ""},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao atualizar situacao: %w", err)

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -40,6 +40,7 @@ interface Tarefa {
   tipoId: number;
   inicioPrevisto: string | null;
   prazo: string | null;
+  tarefaPaiId: number | null;
   criadoPorNome: string;
   responsavelNome: string;
   situacaoDescricao: string;
@@ -49,6 +50,16 @@ interface Tarefa {
   situacaoEncerraTarefa: boolean;
   criadoEm: string;
   ultimaMovEm: string;
+}
+
+interface Subtarefa {
+  id: number;
+  numero: number;
+  ano: number;
+  titulo: string;
+  situacaoDescricao: string;
+  situacaoCor: string;
+  responsavelNome: string;
 }
 
 interface Movimentacao {
@@ -100,6 +111,7 @@ type FormData = z.infer<typeof schema>;
 export function TarefaDetail() {
   const { id } = useParams<{ id: string }>();
   const tarefaId = Number(id);
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('geral');
 
   const [tarefa, setTarefa] = useState<Tarefa | null>(null);
@@ -111,6 +123,8 @@ export function TarefaDetail() {
   });
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
   const [anexos, setAnexos] = useState<Anexo[]>([]);
+  const [subtarefas, setSubtarefas] = useState<Subtarefa[]>([]);
+  const [mostrarFormSubtarefa, setMostrarFormSubtarefa] = useState(false);
   const [arquivosTemp, setArquivosTemp] = useState<Array<{ uuid: string; nome: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -119,9 +133,11 @@ export function TarefaDetail() {
 
   const { execute: atualizar, isLoading: isSubmitting } = useMutate('/tarefas', 'put');
   const { execute: criarMovimentacao } = useMutate('/tarefas', 'post');
+  const { execute: criarSubtarefa, isLoading: isCriandoSubtarefa } = useMutate('/tarefas', 'post');
   const { execute: atualizarMovimentacao } = useMutate('/tarefas', 'put');
   const { execute: removerMovimentacao } = useMutate('/tarefas', 'delete');
   const { execute: removerAnexo } = useMutate('/tarefas', 'delete');
+  const { execute: removerTarefa, isLoading: isRemovendoTarefa } = useMutate('/tarefas', 'delete');
   const { execute: confirmarAnexos, isLoading: isConfirmandoAnexos } = useMutate(
     '/tarefas',
     'post'
@@ -137,6 +153,25 @@ export function TarefaDetail() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
+
+  const {
+    register: registerSubtarefa,
+    handleSubmit: handleSubmitSubtarefa,
+    control: controlSubtarefa,
+    reset: resetSubtarefa,
+    formState: { errors: errorsSubtarefa },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
+
+  const carregarSubtarefas = async () => {
+    try {
+      const response = await api.get(`/tarefas/${tarefaId}/subtarefas`);
+      setSubtarefas(response.data);
+    } catch {
+      toast.error('Erro ao carregar subtarefas');
+    }
+  };
 
   const carregarTarefa = async () => {
     setIsLoading(true);
@@ -159,6 +194,17 @@ export function TarefaDetail() {
         inicioPrevisto: tarefaRes.data.inicioPrevisto || '',
         prazo: tarefaRes.data.prazo || '',
       });
+      resetSubtarefa({
+        titulo: '',
+        descricao: '',
+        projetoId: String(tarefaRes.data.projetoId),
+        responsavelId: String(tarefaRes.data.responsavelId),
+        situacaoId: String(tarefaRes.data.situacaoId),
+        tipoId: String(tarefaRes.data.tipoId),
+        inicioPrevisto: '',
+        prazo: '',
+      });
+      carregarSubtarefas();
     } catch {
       toast.error('Erro ao carregar tarefa');
     } finally {
@@ -286,6 +332,57 @@ export function TarefaDetail() {
     }
   };
 
+  const onSubmitSubtarefa: SubmitHandler<FormData> = async (data) => {
+    try {
+      const payload: Record<string, unknown> = {
+        titulo: data.titulo,
+        descricao: data.descricao,
+        projetoId: Number(data.projetoId),
+        responsavelId: Number(data.responsavelId),
+        situacaoId: Number(data.situacaoId),
+        tipoId: Number(data.tipoId),
+        tarefaPaiId: tarefaId,
+      };
+      if (data.inicioPrevisto) {
+        payload.inicioPrevisto = data.inicioPrevisto;
+      }
+      if (data.prazo) {
+        payload.prazo = data.prazo;
+      }
+      await criarSubtarefa(payload, '/tarefas');
+      resetSubtarefa({
+        titulo: '',
+        descricao: '',
+        projetoId: String(tarefa?.projetoId),
+        responsavelId: String(tarefa?.responsavelId),
+        situacaoId: String(tarefa?.situacaoId),
+        tipoId: String(tarefa?.tipoId),
+        inicioPrevisto: '',
+        prazo: '',
+      });
+      setMostrarFormSubtarefa(false);
+      carregarSubtarefas();
+      toast.success('Subtarefa criada');
+    } catch {
+      toast.error('Erro ao criar subtarefa');
+    }
+  };
+
+  const handleRemoverTarefa = async () => {
+    const temSubtarefas = subtarefas.length > 0;
+    const mensagem = temSubtarefas
+      ? 'Atenção: esta tarefa possui subtarefas. A exclusão removerá também todas as subtarefas em cascata. Deseja continuar?'
+      : 'Deseja remover esta tarefa?';
+    if (!confirm(mensagem)) return;
+    try {
+      await removerTarefa(undefined, `/tarefas/${tarefaId}`);
+      toast.success('Tarefa removida');
+      navigate('/tarefas');
+    } catch {
+      toast.error('Erro ao remover tarefa');
+    }
+  };
+
   const handleAdicionarMovimentacao = async () => {
     if (!novaMovimentacao.descricao && !novaMovimentacao.situacaoId) {
       toast.error('Informe uma situação ou uma descrição');
@@ -350,29 +447,42 @@ export function TarefaDetail() {
 
   const tabs = [
     { id: 'geral', label: 'Visão Geral', icon: <FileText size={18} /> },
-    { id: 'arquivos', label: 'Arquivos', icon: <Files size={18} /> },
     { id: 'movimentacoes', label: 'Movimentações', icon: <History size={18} /> },
+    { id: 'arquivos', label: 'Arquivos', icon: <Files size={18} /> },
+    { id: 'subtarefas', label: 'Tarefas relacionadas', icon: <Plus size={18} /> },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link to="/tarefas">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft size={18} />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Tarefa #{tarefa?.numero}/{tarefa?.ano}
-          </h1>
-          {tarefa && (
-            <p className="text-sm text-gray-500">
-              Criada por {tarefa.criadoPorNome} em{' '}
-              {format(new Date(tarefa.criadoEm), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-            </p>
-          )}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/tarefas">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft size={18} />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Tarefa #{tarefa?.numero}/{tarefa?.ano}
+            </h1>
+            {tarefa && (
+              <p className="text-sm text-gray-500">
+                Criada por {tarefa.criadoPorNome} em{' '}
+                {format(new Date(tarefa.criadoEm), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+              </p>
+            )}
+          </div>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-danger"
+          onClick={handleRemoverTarefa}
+          isLoading={isRemovendoTarefa}
+        >
+          <Trash2 size={18} />
+          Remover
+        </Button>
       </div>
 
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab}>
@@ -667,6 +777,77 @@ export function TarefaDetail() {
                         </div>
                       )}
                     </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </Card>
+        </TabPanel>
+
+        <TabPanel isActive={activeTab === 'subtarefas'}>
+          <Card title="Tarefas relacionadas">
+            <div className="space-y-6">
+              {!mostrarFormSubtarefa && (
+                <Button size="sm" onClick={() => setMostrarFormSubtarefa(true)}>
+                  <Plus size={18} />
+                  Nova subtarefa
+                </Button>
+              )}
+
+              {mostrarFormSubtarefa && (
+                <form onSubmit={handleSubmitSubtarefa(onSubmitSubtarefa)} className="space-y-4 border border-gray-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-700">Nova subtarefa</h3>
+                  <TarefaFormFields
+                    register={registerSubtarefa}
+                    control={controlSubtarefa}
+                    errors={errorsSubtarefa}
+                    opcoes={opcoes}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setMostrarFormSubtarefa(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button type="submit" size="sm" isLoading={isCriandoSubtarefa}>
+                      <Save size={16} />
+                      Criar subtarefa
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              <div className="space-y-2">
+                {subtarefas.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">Nenhuma subtarefa cadastrada.</p>
+                ) : (
+                  subtarefas.map((subtarefa) => (
+                    <Link
+                      key={subtarefa.id}
+                      to={`/tarefas/${subtarefa.id}`}
+                      className="flex items-center justify-between px-3 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">
+                          #{subtarefa.numero}/{subtarefa.ano} {subtarefa.titulo}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Responsável: {subtarefa.responsavelNome}
+                        </p>
+                      </div>
+                      <span
+                        className="px-2 py-0.5 rounded-full text-xs font-medium"
+                        style={{
+                          backgroundColor: `${CORES_SITUACAO[subtarefa.situacaoCor]?.bg || '#6B7280'}20`,
+                          color: CORES_SITUACAO[subtarefa.situacaoCor]?.text || '#374151',
+                        }}
+                      >
+                        {subtarefa.situacaoDescricao}
+                      </span>
+                    </Link>
                   ))
                 )}
               </div>

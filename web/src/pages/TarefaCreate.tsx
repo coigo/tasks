@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 
 interface Opcoes {
   usuarios: Array<{ id: number; nome: string }>;
-  situacoes: Array<{ id: number; descricao: string; encerra_tarefa: boolean }>;
+  situacoes: Array<{ id: number; descricao: string; encerraTarefa: boolean }>;
   tipos: Array<{ id: number; descricao: string }>;
   projetos: Array<{ id: number; nome: string }>;
 }

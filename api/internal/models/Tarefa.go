@@ -11,6 +11,7 @@ type Tarefa struct {
 	Responsavel Usuario
 	Situacao    TarefaSituacao
 	Tipo        TarefaTipo
+	TarefaPaiID *int
 	CriadoEm    time.Time //date
 	UltimaMovEm time.Time //date
 }

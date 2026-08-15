@@ -108,6 +108,7 @@ export function ProjetoDetail() {
         responsavelNome: string;
         projetoNome: string;
         prazo: string | null;
+        tarefaPaiId: number | null;
       }) => ({
         id: t.id,
         numero: t.numero,
@@ -120,6 +121,7 @@ export function ProjetoDetail() {
         responsavelNome: t.responsavelNome,
         projetoNome: t.projetoNome,
         prazo: t.prazo || null,
+        tarefaPaiId: t.tarefaPaiId || null,
       }));
       setTarefas(tarefasData);
     } finally {

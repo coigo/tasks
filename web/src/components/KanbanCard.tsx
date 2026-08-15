@@ -1,23 +1,23 @@
 import { Link } from "react-router-dom";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CORES_SITUACAO } from "../constants/coresSituacao";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, AlertCircle } from "lucide-react";
 
 export interface KanbanTarefa {
-   id: number;
-   numero: number;
-   ano: number;
-   titulo: string;
-   situacaoId: number;
-   situacaoDescricao: string;
-   situacaoCor: string;
-   tipoDescricao: string;
-   responsavelNome: string;
-   projetoNome: string;
-   prazo: string | null;
+    id: number;
+    numero: number;
+    ano: number;
+    titulo: string;
+    situacaoId: number;
+    situacaoDescricao: string;
+    situacaoCor: string;
+    tipoDescricao: string;
+    responsavelNome: string;
+    projetoNome: string;
+    prazo: string | null;
+    tarefaPaiId: number | null;
 }
 
 interface KanbanCardProps {

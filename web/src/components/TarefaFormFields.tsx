@@ -6,7 +6,7 @@ import { RichTextEditor } from './RichTextEditor';
 
 interface Opcoes {
   usuarios: Array<{ id: number; nome: string }>;
-  situacoes: Array<{ id: number; descricao: string; encerra_tarefa: boolean }>;
+  situacoes: Array<{ id: number; descricao: string; encerraTarefa: boolean }>;
   tipos: Array<{ id: number; descricao: string }>;
   projetos: Array<{ id: number; nome: string }>;
 }
@@ -19,8 +19,8 @@ interface TarefaFormFieldsProps {
     responsavelId: string;
     situacaoId: string;
     tipoId: string;
-    inicioPrevisto: string;
-    prazo: string;
+    inicioPrevisto?: string;
+    prazo?: string;
   }>;
   control: Control<{
     titulo: string;
@@ -29,8 +29,8 @@ interface TarefaFormFieldsProps {
     responsavelId: string;
     situacaoId: string;
     tipoId: string;
-    inicioPrevisto: string;
-    prazo: string;
+    inicioPrevisto?: string;
+    prazo?: string;
   }>;
   errors: FieldErrors<{
     titulo: string;
@@ -39,8 +39,8 @@ interface TarefaFormFieldsProps {
     responsavelId: string;
     situacaoId: string;
     tipoId: string;
-    inicioPrevisto: string;
-    prazo: string;
+    inicioPrevisto?: string;
+    prazo?: string;
   }>;
   opcoes: Opcoes;
 }

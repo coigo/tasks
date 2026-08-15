@@ -119,15 +119,15 @@ SELECT COALESCE(MAX(numero), 0) FROM tarefas WHERE ano = $1;
 INSERT INTO tarefas (
     numero, ano, titulo, descricao, projeto_id,
     criado_por_id, responsavel_id, situacao_id, tipo_id,
-    inicio_previsto, prazo
+    inicio_previsto, prazo, tarefa_pai_id
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, ultima_mov_em, criado_em, atualizado_em;
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, ultima_mov_em, criado_em, atualizado_em;
 
 -- name: GetTarefaById :one
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
-       t.inicio_previsto, t.prazo,
+       t.inicio_previsto, t.prazo, t.tarefa_pai_id,
        t.ultima_mov_em, t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
@@ -147,7 +147,7 @@ WHERE t.id = $1 limit 1;
 -- name: ListTarefas :many
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
-       t.inicio_previsto, t.prazo,
+       t.inicio_previsto, t.prazo, t.tarefa_pai_id,
        t.ultima_mov_em, t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
@@ -180,10 +180,11 @@ SET titulo = $2,
     tipo_id = $7,
     inicio_previsto = $8,
     prazo = $9,
+    tarefa_pai_id = $10,
     ultima_mov_em = CURRENT_TIMESTAMP,
     atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, ultima_mov_em, criado_em, atualizado_em;
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, ultima_mov_em, criado_em, atualizado_em;
 
 -- name: UpdateSituacaoTarefa :exec
 UPDATE tarefas
@@ -265,7 +266,7 @@ DELETE FROM tarefas_anexos WHERE id = $1;
 -- name: ListTarefasMovimentadasNoPeriodo :many
 SELECT DISTINCT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
-       t.inicio_previsto, t.prazo,
+       t.inicio_previsto, t.prazo, t.tarefa_pai_id,
        t.criado_em, t.ultima_mov_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
@@ -284,6 +285,27 @@ JOIN tarefas_movimentacoes m ON m.tarefa_id = t.id
 WHERE m.criado_em BETWEEN sqlc.arg(data_inicio) AND sqlc.arg(data_fim)
   AND (sqlc.arg(responsavel_id) = 0 OR t.responsavel_id = sqlc.arg(responsavel_id))
 ORDER BY t.ultima_mov_em DESC;
+
+-- name: ListSubtarefasByTarefaPai :many
+SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
+       t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
+       t.inicio_previsto, t.prazo, t.tarefa_pai_id,
+       t.ultima_mov_em, t.criado_em, t.atualizado_em,
+       p.nome AS projeto_nome,
+       u_criado.nome AS criado_por_nome,
+       u_resp.nome AS responsavel_nome,
+       s.descricao AS situacao_descricao,
+       s.encerra_tarefa AS situacao_encerra_tarefa,
+       s.cor AS situacao_cor,
+       tp.descricao AS tipo_descricao
+FROM tarefas t
+JOIN projetos p ON p.id = t.projeto_id
+JOIN usuarios u_criado ON u_criado.id = t.criado_por_id
+JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
+JOIN tarefas_situacoes s ON s.id = t.situacao_id
+JOIN tarefas_tipo tp ON tp.id = t.tipo_id
+WHERE t.tarefa_pai_id = sqlc.arg(tarefa_pai_id)
+ORDER BY t.ultima_mov_em DESC, t.id DESC;
 
 -- name: CountProjetosCriadosNoPeriodo :one
 SELECT COUNT(*) AS total

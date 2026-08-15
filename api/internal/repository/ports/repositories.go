@@ -3,6 +3,8 @@ package ports
 import (
 	"context"
 	"tasks/internal/repository"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type IProjetoRepository interface {
@@ -55,6 +57,7 @@ type ITarefaRepository interface {
 	CountProjetosCriadosNoPeriodo(ctx context.Context, arg repository.CountProjetosCriadosNoPeriodoParams) (int64, error)
 	CountTarefasAbertasNoPeriodo(ctx context.Context, arg repository.CountTarefasAbertasNoPeriodoParams) (int64, error)
 	CountTarefasEncerradasNoPeriodo(ctx context.Context, arg repository.CountTarefasEncerradasNoPeriodoParams) (int64, error)
+	ListSubtarefasByTarefaPai(ctx context.Context, tarefaPaiID pgtype.Int4) ([]repository.ListSubtarefasByTarefaPaiRow, error)
 }
 
 type ITarefaMovimentacaoRepository interface {
