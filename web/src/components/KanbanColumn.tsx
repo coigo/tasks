@@ -1,18 +1,19 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CORES_SITUACAO } from '../constants/coresSituacao';
-import { KanbanCard, type KanbanTarefa } from './KanbanCard';
+import { KanbanCard } from './KanbanCard';
+import type { TarefaResumida } from '../schemas/tarefa';
 
 export interface Situacao {
   id: number;
   descricao: string;
-  cor: string;
-  encerra_tarefa: boolean;
+  cor?: string;
+  encerra_tarefa?: boolean;
 }
 
 interface KanbanColumnProps {
   situacao: Situacao;
-  tarefas: KanbanTarefa[];
+  tarefas: TarefaResumida[];
 }
 
 export function KanbanColumn({ situacao, tarefas }: KanbanColumnProps) {
@@ -22,7 +23,7 @@ export function KanbanColumn({ situacao, tarefas }: KanbanColumnProps) {
     id: columnDroppableId,
   });
 
-  const bgColor = CORES_SITUACAO[situacao.cor]?.bg || '#6B7280';
+  const bgColor = CORES_SITUACAO[situacao.cor || 'gray']?.bg || '#6B7280';
 
   return (
     <div className="flex-shrink-0 w-72">

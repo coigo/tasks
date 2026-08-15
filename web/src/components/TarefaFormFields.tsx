@@ -3,45 +3,13 @@ import type { Control, UseFormRegister, FieldErrors } from 'react-hook-form';
 import { FormInput } from './FormInput';
 import { FormSelect } from './FormSelect';
 import { RichTextEditor } from './RichTextEditor';
-
-interface Opcoes {
-  usuarios: Array<{ id: number; nome: string }>;
-  situacoes: Array<{ id: number; descricao: string; encerraTarefa: boolean }>;
-  tipos: Array<{ id: number; descricao: string }>;
-  projetos: Array<{ id: number; nome: string }>;
-}
+import type { TarefaFormData } from '../schemas/tarefa';
+import type { Opcoes } from '../schemas/tarefa';
 
 interface TarefaFormFieldsProps {
-  register: UseFormRegister<{
-    titulo: string;
-    descricao: string;
-    projetoId: string;
-    responsavelId: string;
-    situacaoId: string;
-    tipoId: string;
-    inicioPrevisto?: string;
-    prazo?: string;
-  }>;
-  control: Control<{
-    titulo: string;
-    descricao: string;
-    projetoId: string;
-    responsavelId: string;
-    situacaoId: string;
-    tipoId: string;
-    inicioPrevisto?: string;
-    prazo?: string;
-  }>;
-  errors: FieldErrors<{
-    titulo: string;
-    descricao: string;
-    projetoId: string;
-    responsavelId: string;
-    situacaoId: string;
-    tipoId: string;
-    inicioPrevisto?: string;
-    prazo?: string;
-  }>;
+  register: UseFormRegister<TarefaFormData>;
+  control: Control<TarefaFormData>;
+  errors: FieldErrors<TarefaFormData>;
   opcoes: Opcoes;
 }
 

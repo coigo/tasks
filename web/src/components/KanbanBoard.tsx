@@ -3,11 +3,11 @@ import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type Dra
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { KanbanColumn } from './KanbanColumn';
-import type { KanbanTarefa } from './KanbanCard';
+import type { TarefaResumida } from '../schemas/tarefa';
 
 interface KanbanBoardProps {
-  tarefas: KanbanTarefa[];
-  situacoes: { id: number; descricao: string; cor: string; encerra_tarefa: boolean }[];
+  tarefas: TarefaResumida[];
+  situacoes: { id: number; descricao: string; cor?: string; encerra_tarefa?: boolean }[];
   onTarefaMoved?: () => void;
 }
 
@@ -25,7 +25,7 @@ export function KanbanBoard({ tarefas, situacoes, onTarefaMoved }: KanbanBoardPr
   const groupedTarefas = situacoes.reduce((acc, situacao) => {
     acc[situacao.id] = tarefas.filter((t) => t.situacaoId === situacao.id);
     return acc;
-  }, {} as Record<number, KanbanTarefa[]>);
+  }, {} as Record<number, TarefaResumida[]>);
 
   const activeTarefa = activeId ? tarefas.find((t) => t.id === activeId) : null;
 

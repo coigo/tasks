@@ -4,34 +4,21 @@ import { CORES_SITUACAO } from '../constants/coresSituacao';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, ChevronDown, ChevronRight } from 'lucide-react';
-
-export interface TarefaListItem {
-  id: number;
-  numero: number;
-  ano: number;
-  titulo: string;
-  situacaoDescricao: string;
-  situacaoCor: string;
-  tipoDescricao: string;
-  responsavelNome: string;
-  projetoNome: string;
-  prazo: string | null;
-  tarefaPaiId: number | null;
-}
+import type { TarefaResumida } from '../schemas/tarefa';
 
 interface TarefaListProps {
-  tarefas: TarefaListItem[];
+  tarefas: TarefaResumida[];
   isLoading?: boolean;
 }
 
 interface Row {
-  tarefa: TarefaListItem;
+  tarefa: TarefaResumida;
   depth: number;
 }
 
-function buildTree(tarefas: TarefaListItem[]) {
-  const childrenMap = new Map<number, TarefaListItem[]>();
-  const roots: TarefaListItem[] = [];
+function buildTree(tarefas: TarefaResumida[]) {
+  const childrenMap = new Map<number, TarefaResumida[]>();
+  const roots: TarefaResumida[] = [];
 
   for (const tarefa of tarefas) {
     if (tarefa.tarefaPaiId) {
@@ -47,13 +34,13 @@ function buildTree(tarefas: TarefaListItem[]) {
 }
 
 function getVisibleRows(
-  roots: TarefaListItem[],
-  childrenMap: Map<number, TarefaListItem[]>,
+  roots: TarefaResumida[],
+  childrenMap: Map<number, TarefaResumida[]>,
   expandedIds: Set<number>
 ): Row[] {
   const rows: Row[] = [];
 
-  function walk(tarefas: TarefaListItem[], depth: number) {
+  function walk(tarefas: TarefaResumida[], depth: number) {
     for (const tarefa of tarefas) {
       rows.push({ tarefa, depth });
       if (expandedIds.has(tarefa.id)) {

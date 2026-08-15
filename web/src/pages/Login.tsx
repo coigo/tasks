@@ -31,7 +31,7 @@ export function Login() {
       await login(data.usuario, data.senha);
       toast.success('Bem-vindo!');
       navigate('/');
-    } catch (error) {
+    } catch {
       toast.error('Credenciais inválidas');
     }
   };

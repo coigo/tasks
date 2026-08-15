@@ -6,6 +6,7 @@ import { FileBarChart, FolderKanban, ListTodo, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import type { TarefaResumida } from '../schemas/tarefa';
 
 type PeriodoOpcao = 'essa_semana' | 'esse_mes' | 'esse_ano' | 'data_definida';
 
@@ -15,29 +16,16 @@ interface Metricas {
   tarefas_encerradas: number;
 }
 
-interface Tarefa {
-  id: number;
-  numero: number;
-  ano: number;
-  titulo: string;
-  responsavelNome: string;
-  situacaoDescricao: string;
-  tipoDescricao: string;
-  projetoNome: string;
-  ultimaMovEm: string;
-}
-
 export function Relatorios() {
   const [periodo, setPeriodo] = useState<PeriodoOpcao>('essa_semana');
   const [dataInicioInput, setDataInicioInput] = useState('');
   const [dataFimInput, setDataFimInput] = useState('');
-  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
+  const [tarefas, setTarefas] = useState<TarefaResumida[]>([]);
   const [metricas, setMetricas] = useState<Metricas>({
     total_projetos: 0,
     tarefas_abertas: 0,
     tarefas_encerradas: 0,
   });
-  const [, setIsLoading] = useState(false);
   const [isLoadingMetricas, setIsLoadingMetricas] = useState(false);
 
   const { dataInicio, dataFim } = useMemo(() => {
@@ -85,22 +73,16 @@ export function Relatorios() {
   };
 
   const carregarTarefas = async () => {
-    setIsLoading(true);
     try {
       const response = await api.get(`/relatorios/periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
       setTarefas(response.data);
     } catch {
       toast.error('Erro ao carregar relatório');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     carregarMetricas();
-  }, [dataInicio, dataFim]);
-
-  useEffect(() => {
     carregarTarefas();
   }, [dataInicio, dataFim]);
 
@@ -227,8 +209,13 @@ export function Relatorios() {
                   {tarefa.projetoNome} • {tarefa.tipoDescricao} • {tarefa.situacaoDescricao}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Responsável: {tarefa.responsavelNome} • Última movimentação:{' '}
-                  {format(new Date(tarefa.ultimaMovEm), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  Responsável: {tarefa.responsavelNome}
+                  {tarefa.ultimaMovEm && (
+                    <>
+                      {' '}• Última movimentação:{' '}
+                      {format(new Date(tarefa.ultimaMovEm), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                    </>
+                  )}
                 </p>
               </div>
             ))}

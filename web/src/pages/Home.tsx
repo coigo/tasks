@@ -4,6 +4,7 @@ import { Card } from '../components/Card';
 import { Link } from 'react-router-dom';
 import { ClipboardList, CheckCircle2, Clock } from 'lucide-react';
 import { CORES_SITUACAO } from '../constants/coresSituacao';
+import type { TarefaResumida } from '../schemas/tarefa';
 
 interface Metricas {
   por_situacao: Array<{ id: number; descricao: string; encerra_tarefa: boolean; cor: string; total: number }>;
@@ -11,23 +12,9 @@ interface Metricas {
   por_responsavel: Array<{ id: number; nome: string; total: number }>;
 }
 
-interface Tarefa {
-  id: number;
-  numero: number;
-  ano: number;
-  titulo: string;
-  situacaoDescricao: string;
-  situacaoEncerraTarefa: boolean;
-  situacaoCor: string;
-  tipoDescricao: string;
-  responsavelNome: string;
-  projetoNome: string;
-  ultimaMovEm: string;
-}
-
 export function Home() {
   const [metricas, setMetricas] = useState<Metricas | null>(null);
-  const [minhasTarefas, setMinhasTarefas] = useState<Tarefa[]>([]);
+  const [minhasTarefas, setMinhasTarefas] = useState<TarefaResumida[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

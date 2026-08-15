@@ -4,24 +4,10 @@ import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, AlertCircle } from "lucide-react";
-
-export interface KanbanTarefa {
-    id: number;
-    numero: number;
-    ano: number;
-    titulo: string;
-    situacaoId: number;
-    situacaoDescricao: string;
-    situacaoCor: string;
-    tipoDescricao: string;
-    responsavelNome: string;
-    projetoNome: string;
-    prazo: string | null;
-    tarefaPaiId: number | null;
-}
+import type { TarefaResumida } from "../schemas/tarefa";
 
 interface KanbanCardProps {
-   tarefa: KanbanTarefa;
+   tarefa: TarefaResumida;
 }
 
 export function KanbanCard({ tarefa }: KanbanCardProps) {
