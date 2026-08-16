@@ -14,7 +14,7 @@ import (
 
 type ContainerConfig struct {
 	Pool   *pgxpool.Pool
-	Router *gin.Engine
+	Router gin.IRouter
 	Config config.Config
 }
 

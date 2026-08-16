@@ -15,7 +15,7 @@ type AuthHandler struct {
 }
 
 type AuthHandlerConfig struct {
-	Router      *gin.Engine
+	Router      gin.IRouter
 	AuthService *services.AuthService
 }
 
@@ -49,8 +49,9 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 	tokens, usuario, err := h.authService.Login(ctx.Request.Context(), req.Usuario, req.Senha)
+	fmt.Println(err)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 

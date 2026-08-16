@@ -15,7 +15,7 @@ type TarefaAnexoHandler struct {
 }
 
 type TarefaAnexoHandlerConfig struct {
-	Router  *gin.Engine
+	Router  gin.IRouter
 	Service *services.TarefaAnexoService
 	Auth    *services.AuthService
 }

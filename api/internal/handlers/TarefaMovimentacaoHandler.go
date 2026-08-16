@@ -15,7 +15,7 @@ type TarefaMovimentacaoHandler struct {
 }
 
 type TarefaMovimentacaoHandlerConfig struct {
-	Router  *gin.Engine
+	Router  gin.IRouter
 	Service *services.TarefaMovimentacaoService
 	Auth    *services.AuthService
 }

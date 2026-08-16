@@ -16,7 +16,7 @@ type UsuarioHandler struct {
 }
 
 type UsuarioHandlerConfig struct {
-	Router  *gin.Engine
+	Router  gin.IRouter
 	Service *services.UsuarioService
 	Auth    *services.AuthService
 }

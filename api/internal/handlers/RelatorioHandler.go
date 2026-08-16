@@ -16,7 +16,7 @@ type RelatorioHandler struct {
 }
 
 type RelatorioHandlerConfig struct {
-	Router           *gin.Engine
+	Router           gin.IRouter
 	TarefaService    *services.TarefaService
 	RelatorioService *services.RelatorioService
 	Auth             *services.AuthService

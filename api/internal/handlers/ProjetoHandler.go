@@ -15,7 +15,7 @@ type ProjetoHandler struct {
 }
 
 type ProjetoHandlerConfig struct {
-	Router  *gin.Engine
+	Router  gin.IRouter
 	Service *services.ProjetoService
 	Auth    *services.AuthService
 }

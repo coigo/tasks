@@ -31,17 +31,26 @@ func main() {
 
 	router := gin.Default()
 	router.Use(corsMiddleware())
+	apiGroup := router.Group("/api")
 	
 	containerConfig := container.ContainerConfig{
 		Pool:   pool,
-		Router: router,
+		Router: apiGroup,
 		Config: cfg,
 	}
-
+	
 	if err := container.New(ctx, &containerConfig); err != nil {
 		panic(err)
 	}
 
+	router.Static("/assets", "./internal/static/assets")
+	router.StaticFile("/favicon.ico", "./internal/static/favicon.ico")
+	
+	
+	router.NoRoute(func (c *gin.Context) {
+		c.File("./internal/static/index.html")
+	})
+	
 	port := cfg.AppPort
 	if port == "" {
 		port = "8080"

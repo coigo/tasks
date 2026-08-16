@@ -19,7 +19,7 @@ type TarefaHandler struct {
 }
 
 type TarefaHandlerConfig struct {
-	Router         *gin.Engine
+	Router         gin.IRouter
 	Service        *services.TarefaService
 	UsuarioService *services.UsuarioService
 	AnexoService   *services.TarefaAnexoService
