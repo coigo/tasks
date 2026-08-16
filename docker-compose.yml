@@ -26,15 +26,15 @@ services:
     volumes:
       - miniodata:/data
 
-  # server: 
-  #   build: ./api
-  #   container_name: tasks_server
-  #   env_file: ./api/.env
-  #   ports:
-  #     - 8080:8080
-  #   depends_on:
-  #     - minio
-  #     - postgres
+  server: 
+    build: ./
+    container_name: tasks_server
+    env_file: ./api/.env
+    ports:
+      - 8080:8080
+    depends_on:
+      - minio
+      - postgres
     
 
 volumes:

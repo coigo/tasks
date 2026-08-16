@@ -1,0 +1,10 @@
+.git
+.gitignore
+.env
+.env.*
+web/node_modules
+web/dist
+README.md
+*.md
+Dockerfile
+api/Dockerfile
