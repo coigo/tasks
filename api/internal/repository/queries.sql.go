@@ -203,10 +203,10 @@ const createTarefa = `-- name: CreateTarefa :one
 INSERT INTO tarefas (
     numero, ano, titulo, descricao, projeto_id,
     criado_por_id, responsavel_id, situacao_id, tipo_id,
-    inicio_previsto, prazo, tarefa_pai_id
+    inicio_previsto, prazo, tarefa_pai_id, pesquisa
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, ultima_mov_em, criado_em, atualizado_em
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_tsvector('portuguese', $13::text))
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, ultima_mov_em, criado_em, atualizado_em, pesquisa
 `
 
 type CreateTarefaParams struct {
@@ -222,6 +222,7 @@ type CreateTarefaParams struct {
 	InicioPrevisto pgtype.Date `json:"inicioPrevisto"`
 	Prazo          pgtype.Date `json:"prazo"`
 	TarefaPaiID    pgtype.Int4 `json:"tarefaPaiId"`
+	Pesquisa       string      `json:"pesquisa"`
 }
 
 type CreateTarefaRow struct {
@@ -241,6 +242,7 @@ type CreateTarefaRow struct {
 	UltimaMovEm    pgtype.Timestamp `json:"ultimaMovEm"`
 	CriadoEm       pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm   pgtype.Timestamp `json:"atualizadoEm"`
+	Pesquisa       interface{}      `json:"pesquisa"`
 }
 
 func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (CreateTarefaRow, error) {
@@ -257,6 +259,7 @@ func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Cre
 		arg.InicioPrevisto,
 		arg.Prazo,
 		arg.TarefaPaiID,
+		arg.Pesquisa,
 	)
 	var i CreateTarefaRow
 	err := row.Scan(
@@ -276,6 +279,7 @@ func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Cre
 		&i.UltimaMovEm,
 		&i.CriadoEm,
 		&i.AtualizadoEm,
+		&i.Pesquisa,
 	)
 	return i, err
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"tasks/internal/repository"
 	"tasks/internal/repository/ports"
+	"tasks/internal/utils"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -12,13 +13,32 @@ import (
 
 type TarefaService struct {
 	tarefaRepository ports.ITarefaRepository
+	projetoRepository ports.IProjetoRepository
+	situacaoRepository ports.ITarefaSituacaoRepository
+	
 }
 
-func NewTarefaService(repo ports.ITarefaRepository) *TarefaService {
-	return &TarefaService{tarefaRepository: repo}
+func NewTarefaService(repo ports.ITarefaRepository, projeto ports.IProjetoRepository, situacao ports.ITarefaSituacaoRepository) *TarefaService {
+	return &TarefaService{
+		tarefaRepository: repo,
+		projetoRepository: projeto,
+		situacaoRepository: situacao,
+		
+	}
 }
 
 func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, projetoID, criadoPorID, responsavelID, situacaoID, tipoID int32, inicioPrevisto, prazo *string, tarefaPaiID *int32) (*repository.CreateTarefaRow, error) {
+
+	projeto, err := s.projetoRepository.GetProjetoById(ctx, projetoID)
+	if (err != nil) {
+		return nil, fmt.Errorf("projeto nao encontrado")
+	}
+
+	situacao, err := s.situacaoRepository.GetTarefaSituacaoById(ctx, situacaoID)
+	if (err != nil) {
+		return nil, fmt.Errorf("situacao nao encontrada")
+	}
+	
 	if titulo == "" {
 		return nil, fmt.Errorf("titulo e obrigatorio")
 	}
@@ -81,6 +101,13 @@ func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, pro
 		tarefaPaiParam = pgtype.Int4{Int32: *tarefaPaiID, Valid: true}
 	}
 
+	textoPesquisa := fmt.Sprintf("%v %v %v %v",
+		projeto.Nome, 
+		situacao.Descricao,
+ 		titulo,
+		utils.ClearHtml(descricao),
+	) 
+	
 	tarefa, err := s.tarefaRepository.CreateTarefa(ctx, repository.CreateTarefaParams{
 		Numero:         numero,
 		Ano:            ano,
@@ -94,6 +121,7 @@ func (s *TarefaService) Criar(ctx context.Context, titulo, descricao string, pro
 		InicioPrevisto: inicioPrevistoDate,
 		Prazo:          prazoDate,
 		TarefaPaiID:    tarefaPaiParam,
+		Pesquisa: 		textoPesquisa,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar tarefa: %w", err)

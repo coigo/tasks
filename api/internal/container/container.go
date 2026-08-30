@@ -38,7 +38,7 @@ func New(ctx context.Context, cfg *ContainerConfig) error {
 	projetoService := services.NewProjetoService(db)
 	tarefaSituacaoService := services.NewTarefaSituacaoService(db)
 	tarefaTipoService := services.NewTarefaTipoService(db)
-	tarefaService := services.NewTarefaService(db)
+	tarefaService := services.NewTarefaService(db, db, db)
 	tarefaMovimentacaoService := services.NewTarefaMovimentacaoService(db, db)
 	tarefaAnexoService := services.NewTarefaAnexoService(db, minioStorage)
 	relatorioService := services.NewRelatorioService(db)

@@ -119,10 +119,10 @@ SELECT COALESCE(MAX(numero), 0) FROM tarefas WHERE ano = $1;
 INSERT INTO tarefas (
     numero, ano, titulo, descricao, projeto_id,
     criado_por_id, responsavel_id, situacao_id, tipo_id,
-    inicio_previsto, prazo, tarefa_pai_id
+    inicio_previsto, prazo, tarefa_pai_id, pesquisa
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, ultima_mov_em, criado_em, atualizado_em;
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_tsvector('portuguese', sqlc.arg(pesquisa)::text))
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, ultima_mov_em, criado_em, atualizado_em, pesquisa;
 
 -- name: GetTarefaById :one
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,

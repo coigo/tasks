@@ -33,6 +33,7 @@ type Tarefa struct {
 	InicioPrevisto pgtype.Date      `json:"inicioPrevisto"`
 	Prazo          pgtype.Date      `json:"prazo"`
 	TarefaPaiID    pgtype.Int4      `json:"tarefaPaiId"`
+	Pesquisa       interface{}      `json:"pesquisa"`
 }
 
 type TarefasAnexo struct {
