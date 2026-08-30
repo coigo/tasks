@@ -139,11 +139,11 @@ func (s *TarefaService) BuscarPorId(ctx context.Context, id int32) (*repository.
 
 func (s *TarefaService) Listar(ctx context.Context, responsavelID, situacaoID, tipoID, projetoID int32, busca string, incluirEncerradas bool) ([]repository.ListTarefasRow, error) {
 	params := repository.ListTarefasParams{
-		ResponsavelID:     responsavelID,
-		SituacaoID:        situacaoID,
-		TipoID:            tipoID,
-		ProjetoID:         projetoID,
-		Busca:             busca,
+		ResponsavelID:     pgtype.Int4{Int32: responsavelID, Valid: responsavelID != 0},
+		SituacaoID:        pgtype.Int4{Int32: situacaoID, Valid: situacaoID != 0},
+		TipoID:            pgtype.Int4{Int32: tipoID, Valid: tipoID != 0},
+		ProjetoID:         pgtype.Int4{Int32: projetoID, Valid: projetoID != 0},
+		Busca:             pgtype.Text{String: busca, Valid: busca != ""},
 		IncluirEncerradas: incluirEncerradas,
 	}
 	return s.tarefaRepository.ListTarefas(ctx, params)

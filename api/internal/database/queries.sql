@@ -159,15 +159,22 @@ SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
 FROM tarefas t
 JOIN projetos p ON p.id = t.projeto_id
 JOIN usuarios u_criado ON u_criado.id = t.criado_por_id
-JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
+LEFT JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
 JOIN tarefas_situacoes s ON s.id = t.situacao_id
 JOIN tarefas_tipo tp ON tp.id = t.tipo_id
-WHERE (sqlc.arg(responsavel_id) = 0 OR t.responsavel_id = sqlc.arg(responsavel_id))
-  AND (sqlc.arg(situacao_id) = 0 OR t.situacao_id = sqlc.arg(situacao_id))
-  AND (sqlc.arg(tipo_id) = 0 OR t.tipo_id = sqlc.arg(tipo_id))
-  AND (sqlc.arg(projeto_id) = 0 OR t.projeto_id = sqlc.arg(projeto_id))
-  AND (sqlc.arg(busca) = '' OR t.titulo ILIKE '%' || sqlc.arg(busca) || '%' OR t.descricao ILIKE '%' || sqlc.arg(busca) || '%')
-  AND (sqlc.arg(incluir_encerradas) = TRUE OR s.encerra_tarefa = FALSE)
+WHERE (sqlc.narg('responsavel_id')::int IS NULL OR t.responsavel_id = sqlc.narg('responsavel_id'))
+  AND (sqlc.narg('situacao_id')::int IS NULL OR t.situacao_id = sqlc.narg('situacao_id'))
+  AND (sqlc.narg('tipo_id')::int IS NULL OR t.tipo_id = sqlc.narg('tipo_id'))
+  AND (sqlc.narg('projeto_id')::int IS NULL OR t.projeto_id = sqlc.narg('projeto_id'))
+  AND (
+    sqlc.narg(busca)::text IS NULL
+    OR t.pesquisa @@ 
+       regexp_replace(
+         websearch_to_tsquery('portuguese', sqlc.narg(busca)::text)::text,
+         ' & ', ' | ', 'g'
+       )::tsquery
+  )
+  AND (sqlc.arg('incluir_encerradas')::bool = TRUE OR s.encerra_tarefa = FALSE)
 ORDER BY t.ultima_mov_em DESC, t.id DESC;
 
 -- name: UpdateTarefa :one

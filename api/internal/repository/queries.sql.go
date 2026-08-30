@@ -1067,25 +1067,32 @@ SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
 FROM tarefas t
 JOIN projetos p ON p.id = t.projeto_id
 JOIN usuarios u_criado ON u_criado.id = t.criado_por_id
-JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
+LEFT JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
 JOIN tarefas_situacoes s ON s.id = t.situacao_id
 JOIN tarefas_tipo tp ON tp.id = t.tipo_id
-WHERE ($1 = 0 OR t.responsavel_id = $1)
-  AND ($2 = 0 OR t.situacao_id = $2)
-  AND ($3 = 0 OR t.tipo_id = $3)
-  AND ($4 = 0 OR t.projeto_id = $4)
-  AND ($5 = '' OR t.titulo ILIKE '%' || $5 || '%' OR t.descricao ILIKE '%' || $5 || '%')
-  AND ($6 = TRUE OR s.encerra_tarefa = FALSE)
+WHERE ($1::int IS NULL OR t.responsavel_id = $1)
+  AND ($2::int IS NULL OR t.situacao_id = $2)
+  AND ($3::int IS NULL OR t.tipo_id = $3)
+  AND ($4::int IS NULL OR t.projeto_id = $4)
+  AND (
+    $5::text IS NULL
+    OR t.pesquisa @@ 
+       regexp_replace(
+         websearch_to_tsquery('portuguese', $5::text)::text,
+         ' & ', ' | ', 'g'
+       )::tsquery
+  )
+  AND ($6::bool = TRUE OR s.encerra_tarefa = FALSE)
 ORDER BY t.ultima_mov_em DESC, t.id DESC
 `
 
 type ListTarefasParams struct {
-	ResponsavelID     interface{} `json:"responsavelId"`
-	SituacaoID        interface{} `json:"situacaoId"`
-	TipoID            interface{} `json:"tipoId"`
-	ProjetoID         interface{} `json:"projetoId"`
-	Busca             interface{} `json:"busca"`
-	IncluirEncerradas interface{} `json:"incluirEncerradas"`
+	ResponsavelID     pgtype.Int4 `json:"responsavelId"`
+	SituacaoID        pgtype.Int4 `json:"situacaoId"`
+	TipoID            pgtype.Int4 `json:"tipoId"`
+	ProjetoID         pgtype.Int4 `json:"projetoId"`
+	Busca             pgtype.Text `json:"busca"`
+	IncluirEncerradas bool        `json:"incluirEncerradas"`
 }
 
 type ListTarefasRow struct {
@@ -1107,7 +1114,7 @@ type ListTarefasRow struct {
 	AtualizadoEm          pgtype.Timestamp `json:"atualizadoEm"`
 	ProjetoNome           string           `json:"projetoNome"`
 	CriadoPorNome         string           `json:"criadoPorNome"`
-	ResponsavelNome       string           `json:"responsavelNome"`
+	ResponsavelNome       pgtype.Text      `json:"responsavelNome"`
 	SituacaoDescricao     string           `json:"situacaoDescricao"`
 	SituacaoEncerraTarefa pgtype.Bool      `json:"situacaoEncerraTarefa"`
 	SituacaoCor           pgtype.Text      `json:"situacaoCor"`
