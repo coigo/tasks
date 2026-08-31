@@ -126,7 +126,7 @@ export function TarefaList({ tarefas, isLoading }: TarefaListProps) {
                 <span
                   className="px-3 py-1 rounded-full text-xs font-medium"
                   style={{
-                    backgroundColor: `${CORES_SITUACAO[tarefa.situacaoCor]?.bg || '#6B7280'}20`,
+                    backgroundColor: `${CORES_SITUACAO[tarefa.situacaoCor]?.bg || '#6B7280'}`,
                     color: CORES_SITUACAO[tarefa.situacaoCor]?.text || '#374151',
                   }}
                 >

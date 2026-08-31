@@ -285,12 +285,24 @@ export function TarefaDetail() {
             <Card
               title="Dados da tarefa"
               action={
-                <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
-                  <Pencil size={16} />
-                  Editar
-                </Button>
+                <div className="flex items-center gap-3">
+                  <span
+                    className="px-3 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: `${CORES_SITUACAO[tarefa!.situacaoCor]?.bg || '#6B7280'}`,
+                      color: CORES_SITUACAO[tarefa!.situacaoCor]?.text || '#374151',
+                    }}
+                  >
+                    {tarefa!.situacaoDescricao}
+                  </span>
+                  <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
+                    <Pencil size={16} />
+                    Editar
+                  </Button>
+                </div>
               }
             >
+                       
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Título</dt>
@@ -303,16 +315,6 @@ export function TarefaDetail() {
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Responsável</dt>
                   <dd className="mt-1 text-sm text-gray-900">{tarefa?.responsavelNome}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Situação</dt>
-                  <dd className="mt-1 flex items-center gap-2">
-                    <span
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: CORES_SITUACAO[tarefa?.situacaoCor || 'gray']?.bg || '#6B7280' }}
-                    />
-                    <span className="text-sm text-gray-900">{tarefa?.situacaoDescricao}</span>
-                  </dd>
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Tipo</dt>
@@ -472,7 +474,7 @@ export function TarefaDetail() {
                       <span
                         className="px-2 py-0.5 rounded-full text-xs font-medium"
                         style={{
-                          backgroundColor: `${CORES_SITUACAO[subtarefa.situacaoCor]?.bg || '#6B7280'}20`,
+                          backgroundColor: `${CORES_SITUACAO[subtarefa.situacaoCor]?.bg || '#6B7280'}40`,
                           color: CORES_SITUACAO[subtarefa.situacaoCor]?.text || '#374151',
                         }}
                       >
