@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"tasks/internal/repository"
 	"tasks/internal/repository/ports"
+	"tasks/internal/utils"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -30,4 +31,25 @@ func (s *RelatorioService) TarefasMovimentadasNoPeriodo(ctx context.Context, dat
 	}
 
 	return s.tarefaRepository.ListTarefasMovimentadasNoPeriodo(ctx, params)
+}
+
+func (s *RelatorioService) Home(ctx context.Context) (map[string]interface{}, error) {
+	porSituacao, err := s.tarefaRepository.CountTarefasBySituacao(ctx)
+	if err != nil {
+		return nil, err
+	}
+	porTipo, err := s.tarefaRepository.CountTarefasByTipo(ctx)
+	if err != nil {
+		return nil, err
+	}
+	porResponsavel, err := s.tarefaRepository.CountTarefasResponsavel(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]interface{}{
+		"por_situacao":    utils.EnsureList(porSituacao),
+		"por_tipo":        utils.EnsureList(porTipo),
+		"por_responsavel": utils.EnsureList(porResponsavel),
+	}, nil
 }

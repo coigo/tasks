@@ -20,11 +20,11 @@ export function Home() {
   useEffect(() => {
     const carregarDados = async () => {
       try {
-        const [metricasRes, tarefasRes] = await Promise.all([
-          api.get('/relatorios/metricas'),
+        const [homeRes, tarefasRes] = await Promise.all([
+          api.get('/relatorios/home'),
           api.get('/tarefas'),
         ]);
-        setMetricas(metricasRes.data);
+        setMetricas(homeRes.data);
         setMinhasTarefas(tarefasRes.data.slice(0, 5));
       } finally {
         setIsLoading(false);

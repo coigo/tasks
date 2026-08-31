@@ -31,9 +31,20 @@ func NewRelatorioHandler(cfg RelatorioHandlerConfig) *RelatorioHandler {
 	group.Use(middleware.AuthMiddleware(cfg.Auth))
 
 	group.GET("/metricas", handler.Metricas)
+	group.GET("/home", handler.Home)
 	group.GET("/periodo", handler.TarefasMovimentadasNoPeriodo)
 
 	return handler
+}
+
+func (h *RelatorioHandler) Home(ctx *gin.Context) {
+	metricas, err := h.relatorioService.Home(ctx.Request.Context())
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, metricas)
 }
 
 func (h *RelatorioHandler) Metricas(ctx *gin.Context) {
