@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import { FormSelect } from './FormSelect';
+import { useDebounce } from '../hooks/useDebounce';
 import type { Opcoes } from '../schemas/tarefa';
 import type { FiltroTarefa } from '../pages/Tarefas';
 
@@ -11,6 +13,15 @@ interface TarefaFiltersProps {
 }
 
 export function TarefaFilters({ filtros, onChange, opcoes, hideProjeto }: TarefaFiltersProps) {
+  const [buscaInput, setBuscaInput] = useState(filtros.busca || '');
+  const buscaDebounced = useDebounce(buscaInput, 1000);
+
+  useEffect(() => {
+    if (buscaDebounced !== filtros.busca) {
+      onChange({ ...filtros, busca: buscaDebounced });
+    }
+  }, [buscaDebounced, filtros, onChange]);
+
   const update = <K extends keyof FiltroTarefa>(key: K, value: FiltroTarefa[K]) =>
     onChange({ ...filtros, [key]: value });
 
@@ -51,8 +62,8 @@ export function TarefaFilters({ filtros, onChange, opcoes, hideProjeto }: Tarefa
               type="text"
               placeholder="Buscar tarefa..."
               className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              value={filtros.busca}
-              onChange={(e) => update('busca', e.target.value)}
+              value={buscaInput}
+              onChange={(e) => setBuscaInput(e.target.value)}
             />
           </div>
         </div>
