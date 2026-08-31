@@ -474,7 +474,7 @@ export function TarefaDetail() {
                       <span
                         className="px-2 py-0.5 rounded-full text-xs font-medium"
                         style={{
-                          backgroundColor: `${CORES_SITUACAO[subtarefa.situacaoCor]?.bg || '#6B7280'}40`,
+                          backgroundColor: `${CORES_SITUACAO[subtarefa.situacaoCor]?.bg || '#6B7280'}`,
                           color: CORES_SITUACAO[subtarefa.situacaoCor]?.text || '#374151',
                         }}
                       >
