@@ -1,16 +1,16 @@
 services:
-  postgres:
-    image: postgres:16
-    container_name: tasks_postgres
-    restart: on-failure
-    environment:
-      POSTGRES_USER: tasks
-      POSTGRES_PASSWORD: tasks
-      POSTGRES_DB: tasks
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+  # postgres:
+  #   image: postgres:16
+  #   container_name: tasks_postgres
+  #   restart: on-failure
+  #   environment:
+  #     POSTGRES_USER: tasks
+  #     POSTGRES_PASSWORD: tasks
+  #     POSTGRES_DB: tasks
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
 
   minio:
     image: minio/minio:latest
@@ -26,15 +26,15 @@ services:
     volumes:
       - miniodata:/data
 
-  # server: 
-  #   build: ./
-  #   container_name: tasks_server
-  #   env_file: ./api/.env
-  #   ports:
-  #     - 8080:8080
-  #   depends_on:
-  #     - minio
-  #     - postgres
+  server: 
+    build: ./
+    container_name: tasks_server
+    env_file: ./api/.env
+    ports:
+      - 8080:8080
+    depends_on:
+      - minio
+      # - postgres
     
 
 volumes:

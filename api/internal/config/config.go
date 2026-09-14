@@ -15,11 +15,11 @@ type Config struct {
 	DBName       string
 	DATABASE_URL string
 
-	MinioEndpoint  string
-	MinioAccessKey string
-	MinioSecretKey string
-	MinioBucket    string
-	MinioUseSSL    bool
+	S3Endpoint  string
+	S3AccessKey string
+	S3SecretKey string
+	S3Bucket    string
+	S3UseSSL    bool
 
 	JWTSecret string
 
@@ -40,10 +40,10 @@ func Load() Config {
 		DBName:       os.Getenv("DB_NAME"),
 		DATABASE_URL: os.Getenv("DATABASE_URL"),
 
-		MinioEndpoint:  os.Getenv("S3_ENDPOINT"),
-		MinioAccessKey: os.Getenv("S3_ACCESS_KEY"),
-		MinioSecretKey: os.Getenv("S3_SECRET_KEY"),
-		MinioBucket:    os.Getenv("S3_BUCKET"),
+		S3Endpoint:  os.Getenv("S3_ENDPOINT"),
+		S3AccessKey: os.Getenv("S3_ACCESS_KEY"),
+		S3SecretKey: os.Getenv("S3_SECRET_KEY"),
+		S3Bucket:    os.Getenv("S3_BUCKET"),
 
 		JWTSecret: os.Getenv("JWT_SECRET"),
 
@@ -59,8 +59,8 @@ func Load() Config {
 		cfg.AppPort = "8080"
 	}
 
-	if cfg.MinioBucket == "" {
-		cfg.MinioBucket = "tasks"
+	if cfg.S3Bucket == "" {
+		cfg.S3Bucket = "tasks"
 	}
 
 	fmt.Printf("DB: %s:%s/%s\n", cfg.DBHost, cfg.DBPort, cfg.DBName)

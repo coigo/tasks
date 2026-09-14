@@ -21,12 +21,12 @@ type ContainerConfig struct {
 func New(ctx context.Context, cfg *ContainerConfig) error {
 	db := repository.New(cfg.Pool)
 
-	minioStorage, err := storage.NewMinioStorage(ctx, storage.MinioStorageConfig{
-		Endpoint:  cfg.Config.MinioEndpoint,
-		AccessKey: cfg.Config.MinioAccessKey,
-		SecretKey: cfg.Config.MinioSecretKey,
-		Bucket:    cfg.Config.MinioBucket,
-		UseSSL:    cfg.Config.MinioUseSSL,
+	s3Storage, err := storage.NewS3Storage(ctx, storage.S3StorageConfig{
+		Endpoint:  cfg.Config.S3Endpoint,
+		AccessKey: cfg.Config.S3AccessKey,
+		SecretKey: cfg.Config.S3SecretKey,
+		Bucket:    cfg.Config.S3Bucket,
+		UseSSL:    cfg.Config.S3UseSSL,
 		TempDir:   "/temp",
 	})
 	if err != nil {
@@ -40,7 +40,7 @@ func New(ctx context.Context, cfg *ContainerConfig) error {
 	tarefaTipoService := services.NewTarefaTipoService(db)
 	tarefaService := services.NewTarefaService(db, db, db)
 	tarefaMovimentacaoService := services.NewTarefaMovimentacaoService(db, db)
-	tarefaAnexoService := services.NewTarefaAnexoService(db, minioStorage)
+	tarefaAnexoService := services.NewTarefaAnexoService(db, s3Storage)
 	relatorioService := services.NewRelatorioService(db)
 
 	if err := usuarioService.SeedAdmin(ctx); err != nil {

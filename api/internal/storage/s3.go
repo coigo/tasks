@@ -22,7 +22,7 @@ type ArquivoStorage interface {
 	GerarURLAssinada(ctx context.Context, local string, duracao time.Duration) (string, error)
 }
 
-type MinioStorage struct {
+type S3Storage struct {
 	client   *s3.Client
 	bucket   string
 	tempDir  string
@@ -30,7 +30,7 @@ type MinioStorage struct {
 	useSSL   bool
 }
 
-type MinioStorageConfig struct {
+type S3StorageConfig struct {
 	Endpoint  string
 	AccessKey string
 	SecretKey string
@@ -39,7 +39,7 @@ type MinioStorageConfig struct {
 	TempDir   string
 }
 
-func NewMinioStorage(ctx context.Context, cfg MinioStorageConfig) (*MinioStorage, error) {
+func NewS3Storage(ctx context.Context, cfg S3StorageConfig) (*S3Storage, error) {
 	if cfg.TempDir == "" {
 		cfg.TempDir = "/temp"
 	}
@@ -64,7 +64,7 @@ func NewMinioStorage(ctx context.Context, cfg MinioStorageConfig) (*MinioStorage
 		o.UsePathStyle = true
 	})
 
-	storage := &MinioStorage{
+	storage := &S3Storage{
 		client:   client,
 		bucket:   cfg.Bucket,
 		tempDir:  cfg.TempDir,
@@ -79,7 +79,7 @@ func NewMinioStorage(ctx context.Context, cfg MinioStorageConfig) (*MinioStorage
 	return storage, nil
 }
 
-func (s *MinioStorage) ensureBucket(ctx context.Context) error {
+func (s *S3Storage) ensureBucket(ctx context.Context) error {
 	_, err := s.client.HeadBucket(ctx, &s3.HeadBucketInput{
 		Bucket: aws.String(s.bucket),
 	})
@@ -96,7 +96,7 @@ func (s *MinioStorage) ensureBucket(ctx context.Context) error {
 	return nil
 }
 
-func (s *MinioStorage) UploadTemp(ctx context.Context, nome string, conteudo io.Reader) (string, error) {
+func (s *S3Storage) UploadTemp(ctx context.Context, nome string, conteudo io.Reader) (string, error) {
 	arquivoUUID := uuid.New().String() + filepath.Ext(nome)
 	destino := fmt.Sprintf("temp/%s", arquivoUUID )
 	
@@ -112,7 +112,7 @@ func (s *MinioStorage) UploadTemp(ctx context.Context, nome string, conteudo io.
 	return arquivoUUID, nil
 }
 
-func (s *MinioStorage) MoverTempParaTarefa(ctx context.Context, arquivoUUID string, tarefaID int32) (string, error) {
+func (s *S3Storage) MoverTempParaTarefa(ctx context.Context, arquivoUUID string, tarefaID int32) (string, error) {
 
 	tempPath := fmt.Sprintf("temp/%s", arquivoUUID)
 	copySource := fmt.Sprintf("%s/%s", s.bucket, tempPath)
@@ -130,7 +130,7 @@ func (s *MinioStorage) MoverTempParaTarefa(ctx context.Context, arquivoUUID stri
 	return destino, nil
 }
 
-func (s *MinioStorage) GerarURLAssinada(ctx context.Context, local string, duracao time.Duration) (string, error) {
+func (s *S3Storage) GerarURLAssinada(ctx context.Context, local string, duracao time.Duration) (string, error) {
 	ext := filepath.Ext(local)
 	contentType := mime.TypeByExtension(ext)
 	if contentType == "" {
@@ -150,7 +150,7 @@ func (s *MinioStorage) GerarURLAssinada(ctx context.Context, local string, durac
 	return req.URL, nil
 }
 
-func (s *MinioStorage) RemoverArquivo(ctx context.Context, local string) error {
+func (s *S3Storage) RemoverArquivo(ctx context.Context, local string) error {
 	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(local),
