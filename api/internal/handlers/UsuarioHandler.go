@@ -39,15 +39,15 @@ func NewUsuarioHandler(cfg UsuarioHandlerConfig) *UsuarioHandler {
 }
 
 type CriarUsuarioRequest struct {
-	Nome  string `json:"nome" binding:"required"`
-	Usuario string `json:"usuario" binding:"required,usuario"`
-	Senha string `json:"senha" binding:"required,min=4"`
+	Nome    string `json:"nome" binding:"required"`
+	Usuario string `json:"usuario" binding:"required,min=3"`
+	Senha   string `json:"senha" binding:"required,min=4"`
 }
 
 type AtualizarUsuarioRequest struct {
-	Nome  string `json:"nome" binding:"required"`
-	Usuario string `json:"usuario" binding:"required,usuario"`
-	Senha string `json:"senha"`
+	Nome    string `json:"nome" binding:"required"`
+	Usuario string `json:"usuario" binding:"required,min=3"`
+	Senha   string `json:"senha"`
 }
 
 func (h *UsuarioHandler) Listar(ctx *gin.Context) {
