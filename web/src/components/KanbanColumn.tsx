@@ -1,5 +1,5 @@
-import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { CORES_SITUACAO } from '../constants/coresSituacao';
 import { KanbanCard } from './KanbanCard';
 import type { TarefaResumida } from '../schemas/tarefa';
@@ -17,16 +17,29 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ situacao, tarefas }: KanbanColumnProps) {
-  const columnDroppableId = `column-${situacao.id}`;
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+  } = useSortable({ id: `column-${situacao.id}` });
 
-  const { setNodeRef, isOver } = useDroppable({
-    id: columnDroppableId,
-  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const bgColor = CORES_SITUACAO[situacao.cor || 'gray']?.bg || '#6B7280';
 
   return (
-    <div className="flex-shrink-0 w-72">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex-shrink-0 w-72 ${isDragging ? 'opacity-50 z-50' : ''}`}
+    >
       <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
         <div
           className="px-3 py-2 border-b border-gray-200"
@@ -40,14 +53,25 @@ export function KanbanColumn({ situacao, tarefas }: KanbanColumnProps) {
               />
               <h3 className="font-medium text-gray-900 text-sm">{situacao.descricao}</h3>
             </div>
-            <span className="bg-gray-200 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-              {tarefas.length}
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="p-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
+                {...attributes}
+                {...listeners}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                </svg>
+              </button>
+              <span className="bg-gray-200 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                {tarefas.length}
+              </span>
+            </div>
           </div>
         </div>
 
         <div
-          ref={setNodeRef}
           className={`p-2 space-y-2 min-h-[200px] transition-colors ${
             isOver ? 'bg-primary/10 border-2 border-dashed border-blue-300' : ''
           }`}

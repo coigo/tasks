@@ -44,6 +44,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
 interface AppSettings {
   tarefasViewMode: 'list' | 'kanban';
+  kanbanSituacoesOrder?: number[];
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
