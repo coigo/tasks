@@ -1042,7 +1042,7 @@ WHERE ($1::int IS NULL OR t.responsavel_id = $1)
   AND ($4::int IS NULL OR t.projeto_id = $4)
   AND (
     $5::text IS NULL
-    OR websearch_to_tsquery('portuguese', $5::text)
+    OR t.pesquisa @@ websearch_to_tsquery('portuguese', $5::text)
   )
   AND ($6::bool = TRUE OR s.encerra_tarefa = FALSE)
 ORDER BY t.atualizado_em DESC, t.id DESC

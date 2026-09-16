@@ -168,7 +168,7 @@ WHERE (sqlc.narg('responsavel_id')::int IS NULL OR t.responsavel_id = sqlc.narg(
   AND (sqlc.narg('projeto_id')::int IS NULL OR t.projeto_id = sqlc.narg('projeto_id'))
   AND (
     sqlc.narg(busca)::text IS NULL
-    OR websearch_to_tsquery('portuguese', sqlc.narg(busca)::text)
+    OR t.pesquisa @@ websearch_to_tsquery('portuguese', sqlc.narg(busca)::text)
   )
   AND (sqlc.arg('incluir_encerradas')::bool = TRUE OR s.encerra_tarefa = FALSE)
 ORDER BY t.atualizado_em DESC, t.id DESC;

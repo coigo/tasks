@@ -8,6 +8,7 @@ import { TarefaList } from '../components/TarefaList';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { TarefaFilters } from '../components/TarefaFilters';
 import { ViewModeToggle } from '../components/ViewModeToggle';
+import { Tabs, TabPanel } from '../components/Tabs';
 import { useAppSettings } from '../hooks/useLocalStorage';
 import { useTarefaOpcoes } from '../hooks/useTarefaOpcoes';
 import { mapTarefaToResumida } from '../utils/tarefa';
@@ -37,6 +38,7 @@ export function ProjetoDetail() {
   const [isLoading, setIsLoading] = useState(false);
   const [projetoLoading, setProjetoLoading] = useState(true);
   const [filtros, setFiltros] = useState<FiltroTarefa>(FILTRO_INICIAL);
+  const [activeTab, setActiveTab] = useState('descricao');
   const opcoes = useTarefaOpcoes();
 
   useEffect(() => {
@@ -81,6 +83,11 @@ export function ProjetoDetail() {
   const situacoesFiltradas = filtros.situacaoId
     ? opcoes.situacoes.filter((s) => s.id === Number(filtros.situacaoId))
     : opcoes.situacoes;
+
+  const tabs = [
+    { id: 'descricao', label: 'Descrição' },
+    { id: 'tarefas', label: 'Tarefas' },
+  ];
 
   if (projetoLoading) {
     return (
@@ -132,21 +139,29 @@ export function ProjetoDetail() {
         </div>
       </div>
 
-      <Card title="Filtros">
-        <TarefaFilters filtros={filtros} onChange={setFiltros} opcoes={opcoes} hideProjeto />
-      </Card>
+      <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab}>
+        <TabPanel isActive={activeTab === 'descricao'}>
+          <p className="text-gray-500 text-center py-8">Descrição em breve.</p>
+        </TabPanel>
 
-      {settings.tarefasViewMode === 'list' ? (
-        <Card title="Lista de tarefas">
-          <TarefaList tarefas={tarefas} isLoading={isLoading} />
-        </Card>
-      ) : (
-        <KanbanBoard
-          tarefas={tarefas}
-          situacoes={situacoesFiltradas}
-          onTarefaMoved={carregarTarefas}
-        />
-      )}
+        <TabPanel isActive={activeTab === 'tarefas'}>
+          <Card title="Filtros">
+            <TarefaFilters filtros={filtros} onChange={setFiltros} opcoes={opcoes} hideProjeto />
+          </Card>
+
+          {settings.tarefasViewMode === 'list' ? (
+            <Card title="Lista de tarefas">
+              <TarefaList tarefas={tarefas} isLoading={isLoading} />
+            </Card>
+          ) : (
+            <KanbanBoard
+              tarefas={tarefas}
+              situacoes={situacoesFiltradas}
+              onTarefaMoved={carregarTarefas}
+            />
+          )}
+        </TabPanel>
+      </Tabs>
     </div>
   );
 }
