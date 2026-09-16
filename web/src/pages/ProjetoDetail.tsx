@@ -5,6 +5,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Plus, ArrowLeft } from 'lucide-react';
 import { TarefaList } from '../components/TarefaList';
+import { MarkdownEditor } from '../components/MarkdownEditor';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { TarefaFilters } from '../components/TarefaFilters';
 import { ViewModeToggle } from '../components/ViewModeToggle';
@@ -141,7 +142,11 @@ export function ProjetoDetail() {
 
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab}>
         <TabPanel isActive={activeTab === 'descricao'}>
-          <p className="text-gray-500 text-center py-8">Descrição em breve.</p>
+          <MarkdownEditor
+            onChange={(markdown) => {
+              console.log(markdown);
+            }}
+          />
         </TabPanel>
 
         <TabPanel isActive={activeTab === 'tarefas'}>
