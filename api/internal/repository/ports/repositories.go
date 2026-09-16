@@ -60,12 +60,9 @@ type ITarefaRepository interface {
 	ListSubtarefasByTarefaPai(ctx context.Context, tarefaPaiID pgtype.Int4) ([]repository.ListSubtarefasByTarefaPaiRow, error)
 }
 
-type ITarefaMovimentacaoRepository interface {
-	CreateTarefaMovimentacao(ctx context.Context, arg repository.CreateTarefaMovimentacaoParams) (repository.TarefasMovimentaco, error)
-	GetTarefaMovimentacaoById(ctx context.Context, id int32) (repository.TarefasMovimentaco, error)
-	ListTarefaMovimentacoesByTarefa(ctx context.Context, tarefaID int32) ([]repository.ListTarefaMovimentacoesByTarefaRow, error)
-	UpdateTarefaMovimentacao(ctx context.Context, arg repository.UpdateTarefaMovimentacaoParams) (repository.TarefasMovimentaco, error)
-	DeleteTarefaMovimentacao(ctx context.Context, id int32) error
+type ITarefaHistoricoRepository interface {
+	CreateTarefaHistorico(ctx context.Context, arg repository.CreateTarefaHistoricoParams) (repository.TarefasHistorico, error)
+	ListTarefaHistoricoByTarefa(ctx context.Context, tarefaID int32) ([]repository.ListTarefaHistoricoByTarefaRow, error)
 }
 
 type ITarefaAnexoRepository interface {

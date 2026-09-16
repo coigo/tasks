@@ -165,7 +165,7 @@ func (h *TarefaHandler) Atualizar(ctx *gin.Context) {
 		return
 	}
 
-	tarefa, err := h.service.Atualizar(ctx.Request.Context(), int32(id), req.Titulo, req.Descricao, req.ProjetoID, req.ResponsavelID, req.SituacaoID, req.TipoID, req.InicioPrevisto, req.Prazo, req.TarefaPaiID)
+	tarefa, err := h.service.Atualizar(ctx.Request.Context(), int32(id), req.Titulo, req.Descricao, req.ProjetoID, req.ResponsavelID, req.SituacaoID, req.TipoID, req.InicioPrevisto, req.Prazo, req.TarefaPaiID, middleware.GetUsuarioID(ctx))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -200,7 +200,7 @@ func (h *TarefaHandler) Mover(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.service.Mover(ctx.Request.Context(), int32(id), req.SituacaoID); err != nil {
+	if err := h.service.Mover(ctx.Request.Context(), int32(id), req.SituacaoID, middleware.GetUsuarioID(ctx)); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}

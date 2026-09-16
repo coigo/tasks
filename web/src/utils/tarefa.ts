@@ -14,6 +14,7 @@ interface TarefaApi {
   projetoNome: string;
   prazo?: string | null;
   tarefaPaiId?: number | null;
+  atualizadoEm?: string;
 }
 
 export function mapTarefaToResumida(t: TarefaApi): TarefaResumida {
@@ -31,5 +32,6 @@ export function mapTarefaToResumida(t: TarefaApi): TarefaResumida {
     projetoNome: t.projetoNome,
     prazo: t.prazo ?? null,
     tarefaPaiId: t.tarefaPaiId ?? null,
+    atualizadoEm: t.atualizadoEm || '',
   };
 }

@@ -210,10 +210,10 @@ export function Relatorios() {
                 </p>
                 <p className="text-sm text-gray-500">
                   Responsável: {tarefa.responsavelNome}
-                  {tarefa.ultimaMovEm && (
+                  {tarefa.atualizadoEm && (
                     <>
-                      {' '}• Última movimentação:{' '}
-                      {format(new Date(tarefa.ultimaMovEm), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                      {' '}• Última alteração:{' '}
+                      {format(new Date(tarefa.atualizadoEm), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                     </>
                   )}
                 </p>

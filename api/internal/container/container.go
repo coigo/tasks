@@ -38,8 +38,8 @@ func New(ctx context.Context, cfg *ContainerConfig) error {
 	projetoService := services.NewProjetoService(db)
 	tarefaSituacaoService := services.NewTarefaSituacaoService(db)
 	tarefaTipoService := services.NewTarefaTipoService(db)
-	tarefaService := services.NewTarefaService(db, db, db)
-	tarefaMovimentacaoService := services.NewTarefaMovimentacaoService(db, db)
+	tarefaHistoricoService := services.NewTarefaHistoricoService(db)
+	tarefaService := services.NewTarefaService(db, db, db, db, tarefaHistoricoService)
 	tarefaAnexoService := services.NewTarefaAnexoService(db, s3Storage)
 	relatorioService := services.NewRelatorioService(db)
 
@@ -84,9 +84,9 @@ func New(ctx context.Context, cfg *ContainerConfig) error {
 		Auth:           authService,
 	})
 
-	handlers.NewTarefaMovimentacaoHandler(handlers.TarefaMovimentacaoHandlerConfig{
+	handlers.NewTarefaHistoricoHandler(handlers.TarefaHistoricoHandlerConfig{
 		Router:  cfg.Router,
-		Service: tarefaMovimentacaoService,
+		Service: tarefaHistoricoService,
 		Auth:    authService,
 	})
 

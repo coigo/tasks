@@ -8,7 +8,7 @@ import { Button } from '../components/Button';
 import { TarefaFormFields } from '../components/TarefaFormFields';
 import { Tabs, TabPanel } from '../components/Tabs';
 import { AnexosTemp } from '../components/AnexosTemp';
-import { Movimentacoes } from '../components/Movimentacoes';
+import { HistoricoAlteracoes } from '../components/HistoricoAlteracoes';
 import { useMutate } from '../hooks/useApi';
 import { useTarefaOpcoes } from '../hooks/useTarefaOpcoes';
 import { tarefaSchema, type TarefaFormData, buildTarefaPayload } from '../schemas/tarefa';
@@ -27,7 +27,7 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CORES_SITUACAO } from '../constants/coresSituacao';
-import type { Tarefa, Movimentacao, Anexo, Subtarefa } from '../schemas/tarefa';
+import type { Tarefa, HistoricoAlteracao, Anexo, Subtarefa } from '../schemas/tarefa';
 
 export function TarefaDetail() {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +36,7 @@ export function TarefaDetail() {
   const [activeTab, setActiveTab] = useState('geral');
 
   const [tarefa, setTarefa] = useState<Tarefa | null>(null);
-  const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
+  const [historico, setHistorico] = useState<HistoricoAlteracao[]>([]);
   const [anexos, setAnexos] = useState<Anexo[]>([]);
   const [subtarefas, setSubtarefas] = useState<Subtarefa[]>([]);
   const [mostrarFormSubtarefa, setMostrarFormSubtarefa] = useState(false);
@@ -101,13 +101,13 @@ export function TarefaDetail() {
   const carregarTarefa = async () => {
     setIsLoading(true);
     try {
-      const [tarefaRes, movimentacoesRes, anexosRes] = await Promise.all([
+      const [tarefaRes, historicoRes, anexosRes] = await Promise.all([
         api.get(`/tarefas/${tarefaId}`),
-        api.get(`/tarefas/${tarefaId}/movimentacoes`),
+        api.get(`/tarefas/${tarefaId}/historico`),
         api.get(`/tarefas/${tarefaId}/anexos`),
       ]);
       setTarefa(tarefaRes.data);
-      setMovimentacoes(movimentacoesRes.data);
+      setHistorico(historicoRes.data);
       setAnexos(anexosRes.data);
       resetForm(tarefaRes.data);
       resetSubtarefaForm(tarefaRes.data);
@@ -217,7 +217,7 @@ export function TarefaDetail() {
 
   const tabs = [
     { id: 'geral', label: 'Visão Geral', icon: <FileText size={18} /> },
-    { id: 'movimentacoes', label: 'Movimentações', icon: <History size={18} /> },
+    { id: 'historico', label: 'Histórico', icon: <History size={18} /> },
     { id: 'arquivos', label: 'Arquivos', icon: <Files size={18} /> },
     { id: 'subtarefas', label: 'Tarefas relacionadas', icon: <Plus size={18} /> },
   ];
@@ -402,18 +402,9 @@ export function TarefaDetail() {
           </Card>
         </TabPanel>
 
-        <TabPanel isActive={activeTab === 'movimentacoes'}>
-          <Card title="Histórico de movimentações">
-            <Movimentacoes
-              tarefaId={tarefaId}
-              movimentacoes={movimentacoes}
-              opcoes={opcoes}
-              onChange={setMovimentacoes}
-              onSituacaoChange={(situacaoId) => {
-                form.setValue('situacaoId', situacaoId);
-                carregarTarefa();
-              }}
-            />
+        <TabPanel isActive={activeTab === 'historico'}>
+          <Card title="Histórico de alterações">
+            <HistoricoAlteracoes historico={historico} />
           </Card>
         </TabPanel>
 

@@ -14,7 +14,7 @@ export interface TarefaResumida {
   projetoNome: string;
   prazo: string | null;
   tarefaPaiId: number | null;
-  ultimaMovEm?: string;
+  atualizadoEm: string;
 }
 
 export interface Opcoes {
@@ -24,11 +24,11 @@ export interface Opcoes {
   projetos: Array<{ id: number; nome: string }>;
 }
 
-export interface Movimentacao {
+export interface HistoricoAlteracao {
   id: number;
-  situacaoId: number;
-  situacaoDescricao: string;
-  descricao: string;
+  campo: 'descricao' | 'situacao' | 'responsavel';
+  valorAnterior?: string;
+  valorNovo?: string;
   criadoPorNome: string;
   criadoEm: string;
 }
@@ -73,7 +73,6 @@ export interface Tarefa {
   projetoNome: string;
   situacaoEncerraTarefa: boolean;
   criadoEm: string;
-  ultimaMovEm: string;
 }
 
 export const tarefaSchema = z.object({

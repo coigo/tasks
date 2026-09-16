@@ -12,18 +12,20 @@ import (
 )
 
 type TarefaService struct {
-	tarefaRepository ports.ITarefaRepository
+	tarefaRepository   ports.ITarefaRepository
 	projetoRepository ports.IProjetoRepository
 	situacaoRepository ports.ITarefaSituacaoRepository
-	
+	usuarioRepository ports.IUsuarioRepository
+	historicoService  *TarefaHistoricoService
 }
 
-func NewTarefaService(repo ports.ITarefaRepository, projeto ports.IProjetoRepository, situacao ports.ITarefaSituacaoRepository) *TarefaService {
+func NewTarefaService(repo ports.ITarefaRepository, projeto ports.IProjetoRepository, situacao ports.ITarefaSituacaoRepository, usuario ports.IUsuarioRepository, historico *TarefaHistoricoService) *TarefaService {
 	return &TarefaService{
-		tarefaRepository: repo,
-		projetoRepository: projeto,
+		tarefaRepository:   repo,
+		projetoRepository:  projeto,
 		situacaoRepository: situacao,
-		
+		usuarioRepository:  usuario,
+		historicoService:   historico,
 	}
 }
 
@@ -153,7 +155,7 @@ func (s *TarefaService) ListarSubtarefas(ctx context.Context, tarefaPaiID int32)
 	return s.tarefaRepository.ListSubtarefasByTarefaPai(ctx, pgtype.Int4{Int32: tarefaPaiID, Valid: true})
 }
 
-func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descricao string, projetoID, responsavelID, situacaoID, tipoID int32, inicioPrevisto, prazo *string, tarefaPaiID *int32) (*repository.UpdateTarefaRow, error) {
+func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descricao string, projetoID, responsavelID, situacaoID, tipoID int32, inicioPrevisto, prazo *string, tarefaPaiID *int32, criadoPorID int32) (*repository.UpdateTarefaRow, error) {
 	if titulo == "" {
 		return nil, fmt.Errorf("titulo e obrigatorio")
 	}
@@ -178,6 +180,15 @@ func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descric
 			return nil, err
 		}
 	}
+
+	tarefaAtual, err := s.tarefaRepository.GetTarefaById(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("tarefa nao encontrada: %w", err)
+	}
+
+	descricaoChanged := tarefaAtual.Descricao.String != descricao
+	situacaoChanged := tarefaAtual.SituacaoID != situacaoID
+	responsavelChanged := tarefaAtual.ResponsavelID != responsavelID
 
 	var inicioPrevistoDate pgtype.Date
 	if inicioPrevisto != nil {
@@ -215,6 +226,21 @@ func (s *TarefaService) Atualizar(ctx context.Context, id int32, titulo, descric
 	if err != nil {
 		return nil, fmt.Errorf("erro ao atualizar tarefa: %w", err)
 	}
+
+	if descricaoChanged {
+		s.historicoService.Registrar(ctx, id, criadoPorID, "descricao", &tarefaAtual.Descricao.String, &descricao)
+	}
+	if situacaoChanged {
+		situacaoAnterior, _ := s.situacaoRepository.GetTarefaSituacaoById(ctx, tarefaAtual.SituacaoID)
+		situacaoNova, _ := s.situacaoRepository.GetTarefaSituacaoById(ctx, situacaoID)
+		s.historicoService.Registrar(ctx, id, criadoPorID, "situacao", &situacaoAnterior.Descricao, &situacaoNova.Descricao)
+	}
+	if responsavelChanged {
+		responsavelAnterior, _ := s.usuarioRepository.GetUsuarioById(ctx, tarefaAtual.ResponsavelID)
+		responsavelNovo, _ := s.usuarioRepository.GetUsuarioById(ctx, responsavelID)
+		s.historicoService.Registrar(ctx, id, criadoPorID, "responsavel", &responsavelAnterior.Nome, &responsavelNovo.Nome)
+	}
+
 	return &tarefa, nil
 }
 
@@ -222,13 +248,27 @@ func (s *TarefaService) Remover(ctx context.Context, id int32) error {
 	return s.tarefaRepository.DeleteTarefa(ctx, id)
 }
 
-func (s *TarefaService) Mover(ctx context.Context, tarefaID, novaSituacaoID int32) error {
+func (s *TarefaService) Mover(ctx context.Context, tarefaID, novaSituacaoID, criadoPorID int32) error {
+	tarefaAtual, err := s.tarefaRepository.GetTarefaById(ctx, tarefaID)
+	if err != nil {
+		return fmt.Errorf("tarefa nao encontrada: %w", err)
+	}
+
+	if tarefaAtual.SituacaoID == novaSituacaoID {
+		return nil
+	}
+
 	if err := s.tarefaRepository.UpdateSituacaoTarefa(ctx, repository.UpdateSituacaoTarefaParams{
 		ID:         tarefaID,
 		SituacaoID: novaSituacaoID,
 	}); err != nil {
 		return fmt.Errorf("erro ao mover tarefa: %w", err)
 	}
+
+	situacaoAnterior, _ := s.situacaoRepository.GetTarefaSituacaoById(ctx, tarefaAtual.SituacaoID)
+	situacaoNova, _ := s.situacaoRepository.GetTarefaSituacaoById(ctx, novaSituacaoID)
+	s.historicoService.Registrar(ctx, tarefaID, criadoPorID, "situacao", &situacaoAnterior.Descricao, &situacaoNova.Descricao)
+
 	return nil
 }
 

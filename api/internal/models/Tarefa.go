@@ -13,7 +13,6 @@ type Tarefa struct {
 	Tipo        TarefaTipo
 	TarefaPaiID *int
 	CriadoEm    time.Time //date
-	UltimaMovEm time.Time //date
 }
 
 func (Tarefa) TableName() string {

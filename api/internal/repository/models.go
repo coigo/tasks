@@ -28,7 +28,6 @@ type Tarefa struct {
 	SituacaoID     int32            `json:"situacaoId"`
 	TipoID         int32            `json:"tipoId"`
 	CriadoEm       pgtype.Timestamp `json:"criadoEm"`
-	UltimaMovEm    pgtype.Timestamp `json:"ultimaMovEm"`
 	AtualizadoEm   pgtype.Timestamp `json:"atualizadoEm"`
 	InicioPrevisto pgtype.Date      `json:"inicioPrevisto"`
 	Prazo          pgtype.Date      `json:"prazo"`
@@ -47,14 +46,15 @@ type TarefasAnexo struct {
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
 }
 
-type TarefasMovimentaco struct {
-	ID           int32            `json:"id"`
-	TarefaID     int32            `json:"tarefaId"`
-	SituacaoID   int32            `json:"situacaoId"`
-	Descricao    pgtype.Text      `json:"descricao"`
-	CriadoPorID  int32            `json:"criadoPorId"`
-	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
-	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+type TarefasHistorico struct {
+	ID            int32            `json:"id"`
+	TarefaID      int32            `json:"tarefaId"`
+	Campo         string           `json:"campo"`
+	ValorAnterior pgtype.Text      `json:"valorAnterior"`
+	ValorNovo     pgtype.Text      `json:"valorNovo"`
+	CriadoPorID   int32            `json:"criadoPorId"`
+	CriadoEm      pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
 }
 
 type TarefasSituaco struct {

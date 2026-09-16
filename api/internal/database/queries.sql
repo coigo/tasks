@@ -122,13 +122,13 @@ INSERT INTO tarefas (
     inicio_previsto, prazo, tarefa_pai_id, pesquisa
 )
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_tsvector('portuguese', sqlc.arg(pesquisa)::text))
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, ultima_mov_em, criado_em, atualizado_em, pesquisa;
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, criado_em, atualizado_em, pesquisa;
 
 -- name: GetTarefaById :one
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
        t.inicio_previsto, t.prazo, t.tarefa_pai_id,
-       t.ultima_mov_em, t.criado_em, t.atualizado_em,
+       t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
@@ -148,7 +148,7 @@ WHERE t.id = $1 limit 1;
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
        t.inicio_previsto, t.prazo, t.tarefa_pai_id,
-       t.ultima_mov_em, t.criado_em, t.atualizado_em,
+       t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
@@ -171,7 +171,7 @@ WHERE (sqlc.narg('responsavel_id')::int IS NULL OR t.responsavel_id = sqlc.narg(
     OR websearch_to_tsquery('portuguese', sqlc.narg(busca)::text)
   )
   AND (sqlc.arg('incluir_encerradas')::bool = TRUE OR s.encerra_tarefa = FALSE)
-ORDER BY t.ultima_mov_em DESC, t.id DESC;
+ORDER BY t.atualizado_em DESC, t.id DESC;
 
 -- name: UpdateTarefa :one
 UPDATE tarefas
@@ -184,15 +184,13 @@ SET titulo = $2,
     inicio_previsto = $8,
     prazo = $9,
     tarefa_pai_id = $10,
-    ultima_mov_em = CURRENT_TIMESTAMP,
     atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, ultima_mov_em, criado_em, atualizado_em;
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, criado_em, atualizado_em;
 
 -- name: UpdateSituacaoTarefa :exec
 UPDATE tarefas
 SET situacao_id = $2,
-    ultima_mov_em = CURRENT_TIMESTAMP,
     atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1;
 
@@ -220,34 +218,18 @@ LEFT JOIN tarefas t ON t.responsavel_id = u.id
 GROUP BY u.id, u.nome
 ORDER BY u.nome;
 
--- name: CreateTarefaMovimentacao :one
-INSERT INTO tarefas_movimentacoes (tarefa_id, situacao_id, descricao, criado_por_id)
-VALUES ($1, $2, $3, $4)
-RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id,criado_em, atualizado_em;
+-- name: CreateTarefaHistorico :one
+INSERT INTO tarefas_historico (tarefa_id, campo, valor_anterior, valor_novo, criado_por_id)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, tarefa_id, campo, valor_anterior, valor_novo, criado_por_id, criado_em, atualizado_em;
 
--- name: GetTarefaMovimentacaoById :one
-SELECT id, tarefa_id, situacao_id, descricao, criado_por_id, criado_em, atualizado_em FROM tarefas_movimentacoes
-WHERE id = $1 limit 1;
-
--- name: ListTarefaMovimentacoesByTarefa :many
-SELECT m.id, m.tarefa_id, m.situacao_id, m.descricao, m.criado_por_id, m.criado_em, m.atualizado_em,
-       s.descricao AS situacao_descricao,
+-- name: ListTarefaHistoricoByTarefa :many
+SELECT h.id, h.tarefa_id, h.campo, h.valor_anterior, h.valor_novo, h.criado_por_id, h.criado_em, h.atualizado_em,
        u.nome AS criado_por_nome
-FROM tarefas_movimentacoes m
-JOIN tarefas_situacoes s ON s.id = m.situacao_id
-JOIN usuarios u ON u.id = m.criado_por_id
-WHERE m.tarefa_id = $1
-ORDER BY m.criado_em DESC;
-
--- name: UpdateTarefaMovimentacao :one
-UPDATE tarefas_movimentacoes
-SET descricao = $2,
-    atualizado_em = CURRENT_TIMESTAMP
-WHERE id = $1
-RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id,criado_em, atualizado_em;
-
--- name: DeleteTarefaMovimentacao :exec
-DELETE FROM tarefas_movimentacoes WHERE id = $1;
+FROM tarefas_historico h
+JOIN usuarios u ON u.id = h.criado_por_id
+WHERE h.tarefa_id = $1
+ORDER BY h.criado_em DESC;
 
 -- name: CreateTarefaAnexo :one
 INSERT INTO tarefas_anexos (tarefa_id, uuid, nome, local, tamanho)
@@ -270,7 +252,7 @@ DELETE FROM tarefas_anexos WHERE id = $1;
 SELECT DISTINCT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
        t.inicio_previsto, t.prazo, t.tarefa_pai_id,
-       t.criado_em, t.ultima_mov_em, t.atualizado_em,
+       t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
@@ -284,16 +266,16 @@ JOIN usuarios u_criado ON u_criado.id = t.criado_por_id
 JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
 JOIN tarefas_situacoes s ON s.id = t.situacao_id
 JOIN tarefas_tipo tp ON tp.id = t.tipo_id
-JOIN tarefas_movimentacoes m ON m.tarefa_id = t.id
-WHERE m.criado_em BETWEEN sqlc.arg(data_inicio) AND sqlc.arg(data_fim)
+JOIN tarefas_historico h ON h.tarefa_id = t.id
+WHERE h.criado_em BETWEEN sqlc.arg(data_inicio) AND sqlc.arg(data_fim)
   AND (sqlc.arg(responsavel_id) = 0 OR t.responsavel_id = sqlc.arg(responsavel_id))
-ORDER BY t.ultima_mov_em DESC;
+ORDER BY t.atualizado_em DESC;
 
 -- name: ListSubtarefasByTarefaPai :many
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
        t.inicio_previsto, t.prazo, t.tarefa_pai_id,
-       t.ultima_mov_em, t.criado_em, t.atualizado_em,
+       t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
@@ -308,7 +290,7 @@ JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
 JOIN tarefas_situacoes s ON s.id = t.situacao_id
 JOIN tarefas_tipo tp ON tp.id = t.tipo_id
 WHERE t.tarefa_pai_id = sqlc.arg(tarefa_pai_id)
-ORDER BY t.ultima_mov_em DESC, t.id DESC;
+ORDER BY t.atualizado_em DESC, t.id DESC;
 
 -- name: CountProjetosCriadosNoPeriodo :one
 SELECT COUNT(*) AS total

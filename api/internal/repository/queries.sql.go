@@ -206,7 +206,7 @@ INSERT INTO tarefas (
     inicio_previsto, prazo, tarefa_pai_id, pesquisa
 )
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_tsvector('portuguese', $13::text))
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, ultima_mov_em, criado_em, atualizado_em, pesquisa
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, criado_em, atualizado_em, pesquisa
 `
 
 type CreateTarefaParams struct {
@@ -239,7 +239,6 @@ type CreateTarefaRow struct {
 	InicioPrevisto pgtype.Date      `json:"inicioPrevisto"`
 	Prazo          pgtype.Date      `json:"prazo"`
 	TarefaPaiID    pgtype.Int4      `json:"tarefaPaiId"`
-	UltimaMovEm    pgtype.Timestamp `json:"ultimaMovEm"`
 	CriadoEm       pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm   pgtype.Timestamp `json:"atualizadoEm"`
 	Pesquisa       interface{}      `json:"pesquisa"`
@@ -276,7 +275,6 @@ func (q *Queries) CreateTarefa(ctx context.Context, arg CreateTarefaParams) (Cre
 		&i.InicioPrevisto,
 		&i.Prazo,
 		&i.TarefaPaiID,
-		&i.UltimaMovEm,
 		&i.CriadoEm,
 		&i.AtualizadoEm,
 		&i.Pesquisa,
@@ -320,32 +318,35 @@ func (q *Queries) CreateTarefaAnexo(ctx context.Context, arg CreateTarefaAnexoPa
 	return i, err
 }
 
-const createTarefaMovimentacao = `-- name: CreateTarefaMovimentacao :one
-INSERT INTO tarefas_movimentacoes (tarefa_id, situacao_id, descricao, criado_por_id)
-VALUES ($1, $2, $3, $4)
-RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id,criado_em, atualizado_em
+const createTarefaHistorico = `-- name: CreateTarefaHistorico :one
+INSERT INTO tarefas_historico (tarefa_id, campo, valor_anterior, valor_novo, criado_por_id)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, tarefa_id, campo, valor_anterior, valor_novo, criado_por_id, criado_em, atualizado_em
 `
 
-type CreateTarefaMovimentacaoParams struct {
-	TarefaID    int32       `json:"tarefaId"`
-	SituacaoID  int32       `json:"situacaoId"`
-	Descricao   pgtype.Text `json:"descricao"`
-	CriadoPorID int32       `json:"criadoPorId"`
+type CreateTarefaHistoricoParams struct {
+	TarefaID      int32       `json:"tarefaId"`
+	Campo         string      `json:"campo"`
+	ValorAnterior pgtype.Text `json:"valorAnterior"`
+	ValorNovo     pgtype.Text `json:"valorNovo"`
+	CriadoPorID   int32       `json:"criadoPorId"`
 }
 
-func (q *Queries) CreateTarefaMovimentacao(ctx context.Context, arg CreateTarefaMovimentacaoParams) (TarefasMovimentaco, error) {
-	row := q.db.QueryRow(ctx, createTarefaMovimentacao,
+func (q *Queries) CreateTarefaHistorico(ctx context.Context, arg CreateTarefaHistoricoParams) (TarefasHistorico, error) {
+	row := q.db.QueryRow(ctx, createTarefaHistorico,
 		arg.TarefaID,
-		arg.SituacaoID,
-		arg.Descricao,
+		arg.Campo,
+		arg.ValorAnterior,
+		arg.ValorNovo,
 		arg.CriadoPorID,
 	)
-	var i TarefasMovimentaco
+	var i TarefasHistorico
 	err := row.Scan(
 		&i.ID,
 		&i.TarefaID,
-		&i.SituacaoID,
-		&i.Descricao,
+		&i.Campo,
+		&i.ValorAnterior,
+		&i.ValorNovo,
 		&i.CriadoPorID,
 		&i.CriadoEm,
 		&i.AtualizadoEm,
@@ -469,15 +470,6 @@ func (q *Queries) DeleteTarefaAnexo(ctx context.Context, id int32) error {
 	return err
 }
 
-const deleteTarefaMovimentacao = `-- name: DeleteTarefaMovimentacao :exec
-DELETE FROM tarefas_movimentacoes WHERE id = $1
-`
-
-func (q *Queries) DeleteTarefaMovimentacao(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deleteTarefaMovimentacao, id)
-	return err
-}
-
 const deleteTarefaSituacao = `-- name: DeleteTarefaSituacao :exec
 DELETE FROM tarefas_situacoes WHERE id = $1
 `
@@ -559,7 +551,7 @@ const getTarefaById = `-- name: GetTarefaById :one
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
        t.inicio_previsto, t.prazo, t.tarefa_pai_id,
-       t.ultima_mov_em, t.criado_em, t.atualizado_em,
+       t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
@@ -590,7 +582,6 @@ type GetTarefaByIdRow struct {
 	InicioPrevisto        pgtype.Date      `json:"inicioPrevisto"`
 	Prazo                 pgtype.Date      `json:"prazo"`
 	TarefaPaiID           pgtype.Int4      `json:"tarefaPaiId"`
-	UltimaMovEm           pgtype.Timestamp `json:"ultimaMovEm"`
 	CriadoEm              pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm          pgtype.Timestamp `json:"atualizadoEm"`
 	ProjetoNome           string           `json:"projetoNome"`
@@ -619,7 +610,6 @@ func (q *Queries) GetTarefaById(ctx context.Context, id int32) (GetTarefaByIdRow
 		&i.InicioPrevisto,
 		&i.Prazo,
 		&i.TarefaPaiID,
-		&i.UltimaMovEm,
 		&i.CriadoEm,
 		&i.AtualizadoEm,
 		&i.ProjetoNome,
@@ -629,26 +619,6 @@ func (q *Queries) GetTarefaById(ctx context.Context, id int32) (GetTarefaByIdRow
 		&i.SituacaoEncerraTarefa,
 		&i.SituacaoCor,
 		&i.TipoDescricao,
-	)
-	return i, err
-}
-
-const getTarefaMovimentacaoById = `-- name: GetTarefaMovimentacaoById :one
-SELECT id, tarefa_id, situacao_id, descricao, criado_por_id, criado_em, atualizado_em FROM tarefas_movimentacoes
-WHERE id = $1 limit 1
-`
-
-func (q *Queries) GetTarefaMovimentacaoById(ctx context.Context, id int32) (TarefasMovimentaco, error) {
-	row := q.db.QueryRow(ctx, getTarefaMovimentacaoById, id)
-	var i TarefasMovimentaco
-	err := row.Scan(
-		&i.ID,
-		&i.TarefaID,
-		&i.SituacaoID,
-		&i.Descricao,
-		&i.CriadoPorID,
-		&i.CriadoEm,
-		&i.AtualizadoEm,
 	)
 	return i, err
 }
@@ -805,7 +775,7 @@ const listSubtarefasByTarefaPai = `-- name: ListSubtarefasByTarefaPai :many
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
        t.inicio_previsto, t.prazo, t.tarefa_pai_id,
-       t.ultima_mov_em, t.criado_em, t.atualizado_em,
+       t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
@@ -820,7 +790,7 @@ JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
 JOIN tarefas_situacoes s ON s.id = t.situacao_id
 JOIN tarefas_tipo tp ON tp.id = t.tipo_id
 WHERE t.tarefa_pai_id = $1
-ORDER BY t.ultima_mov_em DESC, t.id DESC
+ORDER BY t.atualizado_em DESC, t.id DESC
 `
 
 type ListSubtarefasByTarefaPaiRow struct {
@@ -837,7 +807,6 @@ type ListSubtarefasByTarefaPaiRow struct {
 	InicioPrevisto        pgtype.Date      `json:"inicioPrevisto"`
 	Prazo                 pgtype.Date      `json:"prazo"`
 	TarefaPaiID           pgtype.Int4      `json:"tarefaPaiId"`
-	UltimaMovEm           pgtype.Timestamp `json:"ultimaMovEm"`
 	CriadoEm              pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm          pgtype.Timestamp `json:"atualizadoEm"`
 	ProjetoNome           string           `json:"projetoNome"`
@@ -872,7 +841,6 @@ func (q *Queries) ListSubtarefasByTarefaPai(ctx context.Context, tarefaPaiID pgt
 			&i.InicioPrevisto,
 			&i.Prazo,
 			&i.TarefaPaiID,
-			&i.UltimaMovEm,
 			&i.CriadoEm,
 			&i.AtualizadoEm,
 			&i.ProjetoNome,
@@ -928,47 +896,45 @@ func (q *Queries) ListTarefaAnexosByTarefa(ctx context.Context, tarefaID int32) 
 	return items, nil
 }
 
-const listTarefaMovimentacoesByTarefa = `-- name: ListTarefaMovimentacoesByTarefa :many
-SELECT m.id, m.tarefa_id, m.situacao_id, m.descricao, m.criado_por_id, m.criado_em, m.atualizado_em,
-       s.descricao AS situacao_descricao,
+const listTarefaHistoricoByTarefa = `-- name: ListTarefaHistoricoByTarefa :many
+SELECT h.id, h.tarefa_id, h.campo, h.valor_anterior, h.valor_novo, h.criado_por_id, h.criado_em, h.atualizado_em,
        u.nome AS criado_por_nome
-FROM tarefas_movimentacoes m
-JOIN tarefas_situacoes s ON s.id = m.situacao_id
-JOIN usuarios u ON u.id = m.criado_por_id
-WHERE m.tarefa_id = $1
-ORDER BY m.criado_em DESC
+FROM tarefas_historico h
+JOIN usuarios u ON u.id = h.criado_por_id
+WHERE h.tarefa_id = $1
+ORDER BY h.criado_em DESC
 `
 
-type ListTarefaMovimentacoesByTarefaRow struct {
-	ID                int32            `json:"id"`
-	TarefaID          int32            `json:"tarefaId"`
-	SituacaoID        int32            `json:"situacaoId"`
-	Descricao         pgtype.Text      `json:"descricao"`
-	CriadoPorID       int32            `json:"criadoPorId"`
-	CriadoEm          pgtype.Timestamp `json:"criadoEm"`
-	AtualizadoEm      pgtype.Timestamp `json:"atualizadoEm"`
-	SituacaoDescricao string           `json:"situacaoDescricao"`
-	CriadoPorNome     string           `json:"criadoPorNome"`
+type ListTarefaHistoricoByTarefaRow struct {
+	ID            int32            `json:"id"`
+	TarefaID      int32            `json:"tarefaId"`
+	Campo         string           `json:"campo"`
+	ValorAnterior pgtype.Text      `json:"valorAnterior"`
+	ValorNovo     pgtype.Text      `json:"valorNovo"`
+	CriadoPorID   int32            `json:"criadoPorId"`
+	CriadoEm      pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm  pgtype.Timestamp `json:"atualizadoEm"`
+	CriadoPorNome string           `json:"criadoPorNome"`
 }
 
-func (q *Queries) ListTarefaMovimentacoesByTarefa(ctx context.Context, tarefaID int32) ([]ListTarefaMovimentacoesByTarefaRow, error) {
-	rows, err := q.db.Query(ctx, listTarefaMovimentacoesByTarefa, tarefaID)
+func (q *Queries) ListTarefaHistoricoByTarefa(ctx context.Context, tarefaID int32) ([]ListTarefaHistoricoByTarefaRow, error) {
+	rows, err := q.db.Query(ctx, listTarefaHistoricoByTarefa, tarefaID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListTarefaMovimentacoesByTarefaRow
+	var items []ListTarefaHistoricoByTarefaRow
 	for rows.Next() {
-		var i ListTarefaMovimentacoesByTarefaRow
+		var i ListTarefaHistoricoByTarefaRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TarefaID,
-			&i.SituacaoID,
-			&i.Descricao,
+			&i.Campo,
+			&i.ValorAnterior,
+			&i.ValorNovo,
 			&i.CriadoPorID,
 			&i.CriadoEm,
 			&i.AtualizadoEm,
-			&i.SituacaoDescricao,
 			&i.CriadoPorNome,
 		); err != nil {
 			return nil, err
@@ -1056,7 +1022,7 @@ const listTarefas = `-- name: ListTarefas :many
 SELECT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
        t.inicio_previsto, t.prazo, t.tarefa_pai_id,
-       t.ultima_mov_em, t.criado_em, t.atualizado_em,
+       t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
@@ -1076,14 +1042,10 @@ WHERE ($1::int IS NULL OR t.responsavel_id = $1)
   AND ($4::int IS NULL OR t.projeto_id = $4)
   AND (
     $5::text IS NULL
-    OR t.pesquisa @@ 
-       regexp_replace(
-         websearch_to_tsquery('portuguese', $5::text)::text,
-         ' & ', ' | ', 'g'
-       )::tsquery
+    OR websearch_to_tsquery('portuguese', $5::text)
   )
   AND ($6::bool = TRUE OR s.encerra_tarefa = FALSE)
-ORDER BY t.ultima_mov_em DESC, t.id DESC
+ORDER BY t.atualizado_em DESC, t.id DESC
 `
 
 type ListTarefasParams struct {
@@ -1109,7 +1071,6 @@ type ListTarefasRow struct {
 	InicioPrevisto        pgtype.Date      `json:"inicioPrevisto"`
 	Prazo                 pgtype.Date      `json:"prazo"`
 	TarefaPaiID           pgtype.Int4      `json:"tarefaPaiId"`
-	UltimaMovEm           pgtype.Timestamp `json:"ultimaMovEm"`
 	CriadoEm              pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm          pgtype.Timestamp `json:"atualizadoEm"`
 	ProjetoNome           string           `json:"projetoNome"`
@@ -1151,7 +1112,6 @@ func (q *Queries) ListTarefas(ctx context.Context, arg ListTarefasParams) ([]Lis
 			&i.InicioPrevisto,
 			&i.Prazo,
 			&i.TarefaPaiID,
-			&i.UltimaMovEm,
 			&i.CriadoEm,
 			&i.AtualizadoEm,
 			&i.ProjetoNome,
@@ -1176,7 +1136,7 @@ const listTarefasMovimentadasNoPeriodo = `-- name: ListTarefasMovimentadasNoPeri
 SELECT DISTINCT t.id, t.numero, t.ano, t.titulo, t.descricao, t.projeto_id,
        t.criado_por_id, t.responsavel_id, t.situacao_id, t.tipo_id,
        t.inicio_previsto, t.prazo, t.tarefa_pai_id,
-       t.criado_em, t.ultima_mov_em, t.atualizado_em,
+       t.criado_em, t.atualizado_em,
        p.nome AS projeto_nome,
        u_criado.nome AS criado_por_nome,
        u_resp.nome AS responsavel_nome,
@@ -1190,10 +1150,10 @@ JOIN usuarios u_criado ON u_criado.id = t.criado_por_id
 JOIN usuarios u_resp ON u_resp.id = t.responsavel_id
 JOIN tarefas_situacoes s ON s.id = t.situacao_id
 JOIN tarefas_tipo tp ON tp.id = t.tipo_id
-JOIN tarefas_movimentacoes m ON m.tarefa_id = t.id
-WHERE m.criado_em BETWEEN $1 AND $2
+JOIN tarefas_historico h ON h.tarefa_id = t.id
+WHERE h.criado_em BETWEEN $1 AND $2
   AND ($3 = 0 OR t.responsavel_id = $3)
-ORDER BY t.ultima_mov_em DESC
+ORDER BY t.atualizado_em DESC
 `
 
 type ListTarefasMovimentadasNoPeriodoParams struct {
@@ -1217,7 +1177,6 @@ type ListTarefasMovimentadasNoPeriodoRow struct {
 	Prazo                 pgtype.Date      `json:"prazo"`
 	TarefaPaiID           pgtype.Int4      `json:"tarefaPaiId"`
 	CriadoEm              pgtype.Timestamp `json:"criadoEm"`
-	UltimaMovEm           pgtype.Timestamp `json:"ultimaMovEm"`
 	AtualizadoEm          pgtype.Timestamp `json:"atualizadoEm"`
 	ProjetoNome           string           `json:"projetoNome"`
 	CriadoPorNome         string           `json:"criadoPorNome"`
@@ -1252,7 +1211,6 @@ func (q *Queries) ListTarefasMovimentadasNoPeriodo(ctx context.Context, arg List
 			&i.Prazo,
 			&i.TarefaPaiID,
 			&i.CriadoEm,
-			&i.UltimaMovEm,
 			&i.AtualizadoEm,
 			&i.ProjetoNome,
 			&i.CriadoPorNome,
@@ -1340,7 +1298,6 @@ func (q *Queries) UpdateProjeto(ctx context.Context, arg UpdateProjetoParams) (P
 const updateSituacaoTarefa = `-- name: UpdateSituacaoTarefa :exec
 UPDATE tarefas
 SET situacao_id = $2,
-    ultima_mov_em = CURRENT_TIMESTAMP,
     atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
 `
@@ -1366,10 +1323,9 @@ SET titulo = $2,
     inicio_previsto = $8,
     prazo = $9,
     tarefa_pai_id = $10,
-    ultima_mov_em = CURRENT_TIMESTAMP,
     atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, ultima_mov_em, criado_em, atualizado_em
+RETURNING id, numero, ano, titulo, descricao, projeto_id, criado_por_id, responsavel_id, situacao_id, tipo_id, inicio_previsto, prazo, tarefa_pai_id, criado_em, atualizado_em
 `
 
 type UpdateTarefaParams struct {
@@ -1399,7 +1355,6 @@ type UpdateTarefaRow struct {
 	InicioPrevisto pgtype.Date      `json:"inicioPrevisto"`
 	Prazo          pgtype.Date      `json:"prazo"`
 	TarefaPaiID    pgtype.Int4      `json:"tarefaPaiId"`
-	UltimaMovEm    pgtype.Timestamp `json:"ultimaMovEm"`
 	CriadoEm       pgtype.Timestamp `json:"criadoEm"`
 	AtualizadoEm   pgtype.Timestamp `json:"atualizadoEm"`
 }
@@ -1432,35 +1387,6 @@ func (q *Queries) UpdateTarefa(ctx context.Context, arg UpdateTarefaParams) (Upd
 		&i.InicioPrevisto,
 		&i.Prazo,
 		&i.TarefaPaiID,
-		&i.UltimaMovEm,
-		&i.CriadoEm,
-		&i.AtualizadoEm,
-	)
-	return i, err
-}
-
-const updateTarefaMovimentacao = `-- name: UpdateTarefaMovimentacao :one
-UPDATE tarefas_movimentacoes
-SET descricao = $2,
-    atualizado_em = CURRENT_TIMESTAMP
-WHERE id = $1
-RETURNING id, tarefa_id, situacao_id, descricao, criado_por_id,criado_em, atualizado_em
-`
-
-type UpdateTarefaMovimentacaoParams struct {
-	ID        int32       `json:"id"`
-	Descricao pgtype.Text `json:"descricao"`
-}
-
-func (q *Queries) UpdateTarefaMovimentacao(ctx context.Context, arg UpdateTarefaMovimentacaoParams) (TarefasMovimentaco, error) {
-	row := q.db.QueryRow(ctx, updateTarefaMovimentacao, arg.ID, arg.Descricao)
-	var i TarefasMovimentaco
-	err := row.Scan(
-		&i.ID,
-		&i.TarefaID,
-		&i.SituacaoID,
-		&i.Descricao,
-		&i.CriadoPorID,
 		&i.CriadoEm,
 		&i.AtualizadoEm,
 	)
