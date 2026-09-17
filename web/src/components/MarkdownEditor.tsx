@@ -24,6 +24,11 @@ export function MarkdownEditor({
       Markdown,
     ],
     content: value,
+    editorProps: {
+      attributes: {
+        spellcheck: 'false',
+      },
+    },
     onBlur: ({ editor }) => {
       const markdown = editor.getMarkdown();
       onChange?.(markdown);
@@ -35,12 +40,13 @@ export function MarkdownEditor({
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="border border-gray-200 rounded-lg bg-gray-50 transition-colors ">
-        <div className="p-6 min-h-[300px]">
+    <div className="max-w-6xl mx-auto flex flex-col h-[calc(100vh-18rem)]">
+      <div className="border bg-transparent border-none transition-colors flex-1 overflow-hidden">
+        <div className="p-6 h-full overflow-y-auto">
           <EditorContent
             editor={editor}
             className="outline-none [&_*]:outline-none [&>div]:min-h-[250px]"
+            spellCheck={false}
           />
         </div>
       </div>
@@ -88,10 +94,14 @@ export function MarkdownEditor({
           border-left: 3px solid #e5e7eb;
           padding-left: 1em;
           margin: 0.5em 0;
-          color: #4b5563;
+          color: #6b7280;
+          text-decoration:none;
         }
         .ProseMirror:focus {
           outline: none;
+        }
+        .ProseMirrorGrammarRuler-wrapper {
+          text-decoration: none !important;
         }
       `}</style>
     </div>
