@@ -186,9 +186,17 @@ VALUES ($1)
 RETURNING id, nome, criado_em, deletado_em, atualizado_em
 `
 
-func (q *Queries) CreateProjeto(ctx context.Context, nome string) (Projeto, error) {
+type CreateProjetoRow struct {
+	ID           int32            `json:"id"`
+	Nome         string           `json:"nome"`
+	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
+	DeletadoEm   pgtype.Timestamp `json:"deletadoEm"`
+	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+}
+
+func (q *Queries) CreateProjeto(ctx context.Context, nome string) (CreateProjetoRow, error) {
 	row := q.db.QueryRow(ctx, createProjeto, nome)
-	var i Projeto
+	var i CreateProjetoRow
 	err := row.Scan(
 		&i.ID,
 		&i.Nome,
@@ -509,16 +517,26 @@ func (q *Queries) GetMaxNumeroTarefaByAno(ctx context.Context, ano int32) (inter
 }
 
 const getProjetoById = `-- name: GetProjetoById :one
-SELECT id, nome, criado_em, deletado_em, atualizado_em FROM projetos
+SELECT id, nome, detalhes, criado_em, deletado_em, atualizado_em FROM projetos
 WHERE id = $1 limit 1
 `
 
-func (q *Queries) GetProjetoById(ctx context.Context, id int32) (Projeto, error) {
+type GetProjetoByIdRow struct {
+	ID           int32            `json:"id"`
+	Nome         string           `json:"nome"`
+	Detalhes     pgtype.Text      `json:"detalhes"`
+	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
+	DeletadoEm   pgtype.Timestamp `json:"deletadoEm"`
+	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+}
+
+func (q *Queries) GetProjetoById(ctx context.Context, id int32) (GetProjetoByIdRow, error) {
 	row := q.db.QueryRow(ctx, getProjetoById, id)
-	var i Projeto
+	var i GetProjetoByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.Nome,
+		&i.Detalhes,
 		&i.CriadoEm,
 		&i.DeletadoEm,
 		&i.AtualizadoEm,
@@ -745,15 +763,23 @@ WHERE deletado_em IS NULL
 ORDER BY nome
 `
 
-func (q *Queries) ListProjetos(ctx context.Context) ([]Projeto, error) {
+type ListProjetosRow struct {
+	ID           int32            `json:"id"`
+	Nome         string           `json:"nome"`
+	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
+	DeletadoEm   pgtype.Timestamp `json:"deletadoEm"`
+	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+}
+
+func (q *Queries) ListProjetos(ctx context.Context) ([]ListProjetosRow, error) {
 	rows, err := q.db.Query(ctx, listProjetos)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Projeto
+	var items []ListProjetosRow
 	for rows.Next() {
-		var i Projeto
+		var i ListProjetosRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Nome,
@@ -1282,9 +1308,17 @@ type UpdateProjetoParams struct {
 	Nome string `json:"nome"`
 }
 
-func (q *Queries) UpdateProjeto(ctx context.Context, arg UpdateProjetoParams) (Projeto, error) {
+type UpdateProjetoRow struct {
+	ID           int32            `json:"id"`
+	Nome         string           `json:"nome"`
+	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
+	DeletadoEm   pgtype.Timestamp `json:"deletadoEm"`
+	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+}
+
+func (q *Queries) UpdateProjeto(ctx context.Context, arg UpdateProjetoParams) (UpdateProjetoRow, error) {
 	row := q.db.QueryRow(ctx, updateProjeto, arg.ID, arg.Nome)
-	var i Projeto
+	var i UpdateProjetoRow
 	err := row.Scan(
 		&i.ID,
 		&i.Nome,
@@ -1293,6 +1327,23 @@ func (q *Queries) UpdateProjeto(ctx context.Context, arg UpdateProjetoParams) (P
 		&i.AtualizadoEm,
 	)
 	return i, err
+}
+
+const updateProjetoDetalhes = `-- name: UpdateProjetoDetalhes :exec
+UPDATE projetos
+SET detalhes = $2,
+    atualizado_em = CURRENT_TIMESTAMP
+WHERE id = $1
+`
+
+type UpdateProjetoDetalhesParams struct {
+	ID       int32       `json:"id"`
+	Detalhes pgtype.Text `json:"detalhes"`
+}
+
+func (q *Queries) UpdateProjetoDetalhes(ctx context.Context, arg UpdateProjetoDetalhesParams) error {
+	_, err := q.db.Exec(ctx, updateProjetoDetalhes, arg.ID, arg.Detalhes)
+	return err
 }
 
 const updateSituacaoTarefa = `-- name: UpdateSituacaoTarefa :exec

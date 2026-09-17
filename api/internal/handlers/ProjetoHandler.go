@@ -30,6 +30,7 @@ func NewProjetoHandler(cfg ProjetoHandlerConfig) *ProjetoHandler {
 	group.GET("/:id", handler.BuscarPorId)
 	group.PUT("/:id", handler.Atualizar)
 	group.DELETE("/:id", handler.Remover)
+	group.PATCH("/:id/detalhes", handler.AtualizarDetalhes)
 
 	return handler
 }
@@ -40,6 +41,10 @@ type CriarProjetoRequest struct {
 
 type AtualizarProjetoRequest struct {
 	Nome string `json:"nome" binding:"required"`
+}
+
+type AtualizarDetalhesRequest struct {
+	Detalhes string `json:"detalhes"`
 }
 
 func (h *ProjetoHandler) Listar(ctx *gin.Context) {
@@ -114,4 +119,24 @@ func (h *ProjetoHandler) Remover(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "projeto removido"})
+}
+
+func (h *ProjetoHandler) AtualizarDetalhes(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "id invalido"})
+		return
+	}
+
+	var req AtualizarDetalhesRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "dados invalidos"})
+		return
+	}
+
+	if err := h.service.AtualizarDetalhes(ctx.Request.Context(), int32(id), req.Detalhes); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "detalhes atualizados"})
 }

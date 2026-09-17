@@ -14,6 +14,7 @@ type Projeto struct {
 	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
 	DeletadoEm   pgtype.Timestamp `json:"deletadoEm"`
 	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+	Detalhes     pgtype.Text      `json:"detalhes"`
 }
 
 type Tarefa struct {

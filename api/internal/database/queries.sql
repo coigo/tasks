@@ -38,7 +38,7 @@ FROM usuarios
 WHERE id = sqlc.arg(id);
 
 -- name: GetProjetoById :one
-SELECT id, nome, criado_em, deletado_em, atualizado_em FROM projetos
+SELECT id, nome, detalhes, criado_em, deletado_em, atualizado_em FROM projetos
 WHERE id = $1 limit 1;
 
 -- name: ListProjetos :many
@@ -61,6 +61,12 @@ RETURNING id, nome, criado_em, deletado_em, atualizado_em;
 -- name: DeleteProjeto :exec
 UPDATE projetos
 SET deletado_em = CURRENT_TIMESTAMP,
+    atualizado_em = CURRENT_TIMESTAMP
+WHERE id = $1;
+
+-- name: UpdateProjetoDetalhes :exec
+UPDATE projetos
+SET detalhes = $2,
     atualizado_em = CURRENT_TIMESTAMP
 WHERE id = $1;
 
