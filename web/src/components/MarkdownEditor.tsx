@@ -21,7 +21,7 @@ export function MarkdownEditor({
   const [value, setValue] = useState(initialValue);
   const [isSaving, setIsSaving] = useState(false);
   const lastSavedRef = useRef(initialValue);
-  const debouncedValue = useDebounce(value, 500);
+  const debouncedValue = useDebounce(value, 800);
 
   const editor = useEditor({
     extensions: [
@@ -39,7 +39,7 @@ export function MarkdownEditor({
     },
     content: initialValue,
     contentType: 'markdown',
-    onBlur: ({ editor }) => {
+    onUpdate: ({ editor }) => {
       const markdown = editor.getMarkdown();
       setValue(markdown);
     },
