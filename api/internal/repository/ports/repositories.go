@@ -8,11 +8,12 @@ import (
 )
 
 type IProjetoRepository interface {
-	CreateProjeto(ctx context.Context, nome string) (repository.Projeto, error)
-	GetProjetoById(ctx context.Context, id int32) (repository.Projeto, error)
-	ListProjetos(ctx context.Context) ([]repository.Projeto, error)
-	UpdateProjeto(ctx context.Context, arg repository.UpdateProjetoParams) (repository.Projeto, error)
+	CreateProjeto(ctx context.Context, nome string) (repository.CreateProjetoRow, error)
+	GetProjetoById(ctx context.Context, id int32) (repository.GetProjetoByIdRow, error)
+	ListProjetos(ctx context.Context) ([]repository.ListProjetosRow, error)
+	UpdateProjeto(ctx context.Context, arg repository.UpdateProjetoParams) (repository.UpdateProjetoRow, error)
 	DeleteProjeto(ctx context.Context, id int32) error
+	UpdateProjetoDetalhes(ctx context.Context, arg repository.UpdateProjetoDetalhesParams) error
 }
 
 type IUsuarioRepository interface {

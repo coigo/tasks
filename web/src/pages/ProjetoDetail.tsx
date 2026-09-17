@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 interface Projeto {
   id: number;
   nome: string;
+  detalhes?: string | null;
 }
 
 const FILTRO_INICIAL: FiltroTarefa = {
@@ -143,9 +144,8 @@ export function ProjetoDetail() {
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab}>
         <TabPanel isActive={activeTab === 'descricao'}>
           <MarkdownEditor
-            onChange={(markdown) => {
-              console.log(markdown);
-            }}
+            projetoId={projeto.id}
+            initialValue={projeto.detalhes ?? ''}
           />
         </TabPanel>
 

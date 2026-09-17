@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"tasks/internal/repository"
 	"tasks/internal/repository/ports"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type ProjetoService struct {
@@ -17,7 +19,7 @@ func NewProjetoService(repo ports.IProjetoRepository) *ProjetoService {
 	}
 }
 
-func (s *ProjetoService) Criar(ctx context.Context, nome string) (*repository.Projeto, error) {
+func (s *ProjetoService) Criar(ctx context.Context, nome string) (*repository.CreateProjetoRow, error) {
 	if nome == "" {
 		return nil, fmt.Errorf("nome do projeto e obrigatorio")
 	}
@@ -28,7 +30,7 @@ func (s *ProjetoService) Criar(ctx context.Context, nome string) (*repository.Pr
 	return &projeto, nil
 }
 
-func (s *ProjetoService) BuscarPorId(ctx context.Context, id int32) (*repository.Projeto, error) {
+func (s *ProjetoService) BuscarPorId(ctx context.Context, id int32) (*repository.GetProjetoByIdRow, error) {
 	projeto, err := s.projetoRepository.GetProjetoById(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("projeto nao encontrado: %w", err)
@@ -36,11 +38,11 @@ func (s *ProjetoService) BuscarPorId(ctx context.Context, id int32) (*repository
 	return &projeto, nil
 }
 
-func (s *ProjetoService) Listar(ctx context.Context) ([]repository.Projeto, error) {
+func (s *ProjetoService) Listar(ctx context.Context) ([]repository.ListProjetosRow, error) {
 	return s.projetoRepository.ListProjetos(ctx)
 }
 
-func (s *ProjetoService) Atualizar(ctx context.Context, id int32, nome string) (*repository.Projeto, error) {
+func (s *ProjetoService) Atualizar(ctx context.Context, id int32, nome string) (*repository.UpdateProjetoRow, error) {
 	if nome == "" {
 		return nil, fmt.Errorf("nome do projeto e obrigatorio")
 	}
@@ -56,4 +58,11 @@ func (s *ProjetoService) Atualizar(ctx context.Context, id int32, nome string) (
 
 func (s *ProjetoService) Remover(ctx context.Context, id int32) error {
 	return s.projetoRepository.DeleteProjeto(ctx, id)
+}
+
+func (s *ProjetoService) AtualizarDetalhes(ctx context.Context, id int32, detalhes string) error {
+	return s.projetoRepository.UpdateProjetoDetalhes(ctx, repository.UpdateProjetoDetalhesParams{
+		ID:       id,
+		Detalhes: pgtype.Text{String: detalhes, Valid: detalhes != ""},
+	})
 }
