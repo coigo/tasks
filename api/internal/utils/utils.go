@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/tmc/langchaingo/textsplitter"
 )
 
 func EnsureList[T any](l []T) []T {
@@ -23,4 +24,13 @@ func ClearHtml(html string) string {
 	textoLimpo := p.Sanitize(comEspacos)
 
 	return strings.Join(strings.Fields(textoLimpo), " ")
+}
+
+func GenerateTextChunks (text string) ([]string, error) {
+	splitter := textsplitter.NewRecursiveCharacter(
+		textsplitter.WithChunkSize(500), 
+		textsplitter.WithChunkOverlap(100),
+	)
+
+	return splitter.SplitText(text)
 }

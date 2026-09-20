@@ -3,7 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { FormInput } from '../components/FormInput';
+import { Plus, ArrowLeft, Send } from 'lucide-react';
 import { TarefaList } from '../components/TarefaList';
 import { MarkdownEditor } from '../components/MarkdownEditor';
 import { KanbanBoard } from '../components/KanbanBoard';
@@ -41,6 +42,8 @@ export function ProjetoDetail() {
   const [projetoLoading, setProjetoLoading] = useState(true);
   const [filtros, setFiltros] = useState<FiltroTarefa>(FILTRO_INICIAL);
   const [activeTab, setActiveTab] = useState('descricao');
+  const [ragPrompt, setRagPrompt] = useState('');
+  const [ragLoading, setRagLoading] = useState(false);
   const opcoes = useTarefaOpcoes();
 
   useEffect(() => {
@@ -90,6 +93,21 @@ export function ProjetoDetail() {
     { id: 'descricao', label: 'Descrição' },
     { id: 'tarefas', label: 'Tarefas' },
   ];
+
+  const handleRagSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !ragPrompt.trim()) return;
+
+    setRagLoading(true);
+    try {
+      await api.post(`/projetos/${id}/detalhes`, { prompt: ragPrompt });
+      setRagPrompt('');
+    } catch {
+      toast.error('Erro ao enviar pergunta');
+    } finally {
+      setRagLoading(false);
+    }
+  };
 
   if (projetoLoading) {
     return (
@@ -147,6 +165,25 @@ export function ProjetoDetail() {
             projetoId={projeto.id}
             initialValue={projeto.detalhes ?? ''}
           />
+
+          <form
+            onSubmit={handleRagSubmit}
+            className="mt-6 flex items-end gap-3 max-w-6xl mx-auto"
+          >
+            <div className="flex-1">
+              <FormInput
+                label="Perguntar sobre o projeto"
+                placeholder="Digite sua pergunta..."
+                value={ragPrompt}
+                onChange={(e) => setRagPrompt(e.target.value)}
+                disabled={ragLoading}
+              />
+            </div>
+            <Button type="submit" isLoading={ragLoading} disabled={!ragPrompt.trim()}>
+              <Send size={18} />
+              Enviar
+            </Button>
+          </form>
         </TabPanel>
 
         <TabPanel isActive={activeTab === 'tarefas'}>

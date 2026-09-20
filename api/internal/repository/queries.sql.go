@@ -11,6 +11,13 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type BulkCreateProjetoDetalhesChunksParams struct {
+	ProjetoID  int32       `json:"projetoId"`
+	Content    string      `json:"content"`
+	HeaderPath pgtype.Text `json:"headerPath"`
+	Ordem      int32       `json:"ordem"`
+}
+
 const countProjetosCriadosNoPeriodo = `-- name: CountProjetosCriadosNoPeriodo :one
 SELECT COUNT(*) AS total
 FROM projetos
@@ -202,6 +209,45 @@ func (q *Queries) CreateProjeto(ctx context.Context, nome string) (CreateProjeto
 		&i.Nome,
 		&i.CriadoEm,
 		&i.DeletadoEm,
+		&i.AtualizadoEm,
+	)
+	return i, err
+}
+
+const createProjetoDetalhesChunk = `-- name: CreateProjetoDetalhesChunk :one
+INSERT INTO projetos_detalhes_chunks (
+    projeto_id, content, header_path, ordem, pesquisa
+)
+VALUES (
+    $1, $2, $3, $4,
+    to_tsvector('portuguese', $2 || ' ' || COALESCE($3, ''))
+)
+RETURNING id, projeto_id, content, header_path, ordem, pesquisa, criado_em, atualizado_em
+`
+
+type CreateProjetoDetalhesChunkParams struct {
+	ProjetoID  int32       `json:"projetoId"`
+	Content    string      `json:"content"`
+	HeaderPath pgtype.Text `json:"headerPath"`
+	Ordem      int32       `json:"ordem"`
+}
+
+func (q *Queries) CreateProjetoDetalhesChunk(ctx context.Context, arg CreateProjetoDetalhesChunkParams) (ProjetosDetalhesChunk, error) {
+	row := q.db.QueryRow(ctx, createProjetoDetalhesChunk,
+		arg.ProjetoID,
+		arg.Content,
+		arg.HeaderPath,
+		arg.Ordem,
+	)
+	var i ProjetosDetalhesChunk
+	err := row.Scan(
+		&i.ID,
+		&i.ProjetoID,
+		&i.Content,
+		&i.HeaderPath,
+		&i.Ordem,
+		&i.Pesquisa,
+		&i.CriadoEm,
 		&i.AtualizadoEm,
 	)
 	return i, err
@@ -460,6 +506,15 @@ func (q *Queries) DeleteProjeto(ctx context.Context, id int32) error {
 	return err
 }
 
+const deleteProjetoDetalhesChunksByProjeto = `-- name: DeleteProjetoDetalhesChunksByProjeto :exec
+DELETE FROM projetos_detalhes_chunks WHERE projeto_id = $1
+`
+
+func (q *Queries) DeleteProjetoDetalhesChunksByProjeto(ctx context.Context, projetoID int32) error {
+	_, err := q.db.Exec(ctx, deleteProjetoDetalhesChunksByProjeto, projetoID)
+	return err
+}
+
 const deleteTarefa = `-- name: DeleteTarefa :exec
 DELETE FROM tarefas WHERE id = $1
 `
@@ -539,6 +594,28 @@ func (q *Queries) GetProjetoById(ctx context.Context, id int32) (GetProjetoByIdR
 		&i.Detalhes,
 		&i.CriadoEm,
 		&i.DeletadoEm,
+		&i.AtualizadoEm,
+	)
+	return i, err
+}
+
+const getProjetoDetalhesChunkById = `-- name: GetProjetoDetalhesChunkById :one
+SELECT id, projeto_id, content, header_path, ordem, pesquisa, criado_em, atualizado_em
+FROM projetos_detalhes_chunks
+WHERE id = $1
+`
+
+func (q *Queries) GetProjetoDetalhesChunkById(ctx context.Context, id int32) (ProjetosDetalhesChunk, error) {
+	row := q.db.QueryRow(ctx, getProjetoDetalhesChunkById, id)
+	var i ProjetosDetalhesChunk
+	err := row.Scan(
+		&i.ID,
+		&i.ProjetoID,
+		&i.Content,
+		&i.HeaderPath,
+		&i.Ordem,
+		&i.Pesquisa,
+		&i.CriadoEm,
 		&i.AtualizadoEm,
 	)
 	return i, err
@@ -755,6 +832,42 @@ func (q *Queries) ListNotificacoes(ctx context.Context, id int32) ([]byte, error
 	var notificacoes []byte
 	err := row.Scan(&notificacoes)
 	return notificacoes, err
+}
+
+const listProjetoDetalhesChunksByProjeto = `-- name: ListProjetoDetalhesChunksByProjeto :many
+SELECT id, projeto_id, content, header_path, ordem, pesquisa, criado_em, atualizado_em
+FROM projetos_detalhes_chunks
+WHERE projeto_id = $1
+ORDER BY ordem
+`
+
+func (q *Queries) ListProjetoDetalhesChunksByProjeto(ctx context.Context, projetoID int32) ([]ProjetosDetalhesChunk, error) {
+	rows, err := q.db.Query(ctx, listProjetoDetalhesChunksByProjeto, projetoID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ProjetosDetalhesChunk
+	for rows.Next() {
+		var i ProjetosDetalhesChunk
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProjetoID,
+			&i.Content,
+			&i.HeaderPath,
+			&i.Ordem,
+			&i.Pesquisa,
+			&i.CriadoEm,
+			&i.AtualizadoEm,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listProjetos = `-- name: ListProjetos :many
@@ -1295,6 +1408,67 @@ func (q *Queries) ListUsuarios(ctx context.Context) ([]ListUsuariosRow, error) {
 	return items, nil
 }
 
+const searchProjetoDetalhesChunks = `-- name: SearchProjetoDetalhesChunks :many
+SELECT
+    id, projeto_id, content, header_path, ordem, pesquisa, criado_em, atualizado_em,
+    ts_rank_cd(pesquisa, to_tsquery('portuguese', regexp_replace($1::text, '\s+', ' | ', 'g'))) AS rank
+FROM projetos_detalhes_chunks
+WHERE pesquisa @@ to_tsquery('portuguese', regexp_replace($1::text, '\s+', ' | ', 'g'))
+  AND projeto_id = $2
+ORDER BY rank DESC
+LIMIT $3
+`
+
+type SearchProjetoDetalhesChunksParams struct {
+	Prompt    string `json:"prompt"`
+	ProjetoID int32  `json:"projetoId"`
+	Limite    int32  `json:"limite"`
+}
+
+type SearchProjetoDetalhesChunksRow struct {
+	ID           int32            `json:"id"`
+	ProjetoID    int32            `json:"projetoId"`
+	Content      string           `json:"content"`
+	HeaderPath   pgtype.Text      `json:"headerPath"`
+	Ordem        int32            `json:"ordem"`
+	Pesquisa     interface{}      `json:"pesquisa"`
+	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+	Rank         float32          `json:"rank"`
+}
+
+// TODO: medida provisoria - converte espacos em operadores OR para buscar por qualquer termo.
+// Reavaliar quando o parser de prompt for aprimorado.
+func (q *Queries) SearchProjetoDetalhesChunks(ctx context.Context, arg SearchProjetoDetalhesChunksParams) ([]SearchProjetoDetalhesChunksRow, error) {
+	rows, err := q.db.Query(ctx, searchProjetoDetalhesChunks, arg.Prompt, arg.ProjetoID, arg.Limite)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchProjetoDetalhesChunksRow
+	for rows.Next() {
+		var i SearchProjetoDetalhesChunksRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProjetoID,
+			&i.Content,
+			&i.HeaderPath,
+			&i.Ordem,
+			&i.Pesquisa,
+			&i.CriadoEm,
+			&i.AtualizadoEm,
+			&i.Rank,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateProjeto = `-- name: UpdateProjeto :one
 UPDATE projetos
 SET nome = $2,
@@ -1343,6 +1517,18 @@ type UpdateProjetoDetalhesParams struct {
 
 func (q *Queries) UpdateProjetoDetalhes(ctx context.Context, arg UpdateProjetoDetalhesParams) error {
 	_, err := q.db.Exec(ctx, updateProjetoDetalhes, arg.ID, arg.Detalhes)
+	return err
+}
+
+const updateProjetoDetalhesChunksPesquisa = `-- name: UpdateProjetoDetalhesChunksPesquisa :exec
+UPDATE projetos_detalhes_chunks
+SET pesquisa = to_tsvector('portuguese', content || ' ' || COALESCE(header_path, '')),
+    atualizado_em = CURRENT_TIMESTAMP
+WHERE projeto_id = $1
+`
+
+func (q *Queries) UpdateProjetoDetalhesChunksPesquisa(ctx context.Context, projetoID int32) error {
+	_, err := q.db.Exec(ctx, updateProjetoDetalhesChunksPesquisa, projetoID)
 	return err
 }
 

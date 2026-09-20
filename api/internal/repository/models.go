@@ -17,6 +17,17 @@ type Projeto struct {
 	Detalhes     pgtype.Text      `json:"detalhes"`
 }
 
+type ProjetosDetalhesChunk struct {
+	ID           int32            `json:"id"`
+	ProjetoID    int32            `json:"projetoId"`
+	Content      string           `json:"content"`
+	HeaderPath   pgtype.Text      `json:"headerPath"`
+	Ordem        int32            `json:"ordem"`
+	Pesquisa     interface{}      `json:"pesquisa"`
+	CriadoEm     pgtype.Timestamp `json:"criadoEm"`
+	AtualizadoEm pgtype.Timestamp `json:"atualizadoEm"`
+}
+
 type Tarefa struct {
 	ID             int32            `json:"id"`
 	Numero         int32            `json:"numero"`

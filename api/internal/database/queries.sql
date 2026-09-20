@@ -317,3 +317,51 @@ FROM tarefas t
 JOIN tarefas_situacoes s ON s.id = t.situacao_id
 WHERE t.atualizado_em BETWEEN sqlc.arg(data_inicio) AND sqlc.arg(data_fim)
   AND s.encerra_tarefa = true;
+
+-- name: DeleteProjetoDetalhesChunksByProjeto :exec
+DELETE FROM projetos_detalhes_chunks WHERE projeto_id = $1;
+
+-- name: CreateProjetoDetalhesChunk :one
+INSERT INTO projetos_detalhes_chunks (
+    projeto_id, content, header_path, ordem, pesquisa
+)
+VALUES (
+    $1, $2, $3, $4,
+    to_tsvector('portuguese', $2 || ' ' || COALESCE($3, ''))
+)
+RETURNING id, projeto_id, content, header_path, ordem, pesquisa, criado_em, atualizado_em;
+
+-- name: BulkCreateProjetoDetalhesChunks :copyfrom
+INSERT INTO projetos_detalhes_chunks (
+    projeto_id, content, header_path, ordem
+)
+VALUES ($1, $2, $3, $4);
+
+-- name: UpdateProjetoDetalhesChunksPesquisa :exec
+UPDATE projetos_detalhes_chunks
+SET pesquisa = to_tsvector('portuguese', content || ' ' || COALESCE(header_path, '')),
+    atualizado_em = CURRENT_TIMESTAMP
+WHERE projeto_id = $1;
+
+-- name: SearchProjetoDetalhesChunks :many
+-- TODO: medida provisoria - converte espacos em operadores OR para buscar por qualquer termo.
+-- Reavaliar quando o parser de prompt for aprimorado.
+SELECT
+    id, projeto_id, content, header_path, ordem, pesquisa, criado_em, atualizado_em,
+    ts_rank_cd(pesquisa, to_tsquery('portuguese', regexp_replace(sqlc.arg(prompt)::text, '\s+', ' | ', 'g'))) AS rank
+FROM projetos_detalhes_chunks
+WHERE pesquisa @@ to_tsquery('portuguese', regexp_replace(sqlc.arg(prompt)::text, '\s+', ' | ', 'g'))
+  AND projeto_id = sqlc.arg(projeto_id)
+ORDER BY rank DESC
+LIMIT sqlc.arg(limite);
+
+-- name: ListProjetoDetalhesChunksByProjeto :many
+SELECT id, projeto_id, content, header_path, ordem, pesquisa, criado_em, atualizado_em
+FROM projetos_detalhes_chunks
+WHERE projeto_id = $1
+ORDER BY ordem;
+
+-- name: GetProjetoDetalhesChunkById :one
+SELECT id, projeto_id, content, header_path, ordem, pesquisa, criado_em, atualizado_em
+FROM projetos_detalhes_chunks
+WHERE id = $1;

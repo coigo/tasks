@@ -14,6 +14,15 @@ type IProjetoRepository interface {
 	UpdateProjeto(ctx context.Context, arg repository.UpdateProjetoParams) (repository.UpdateProjetoRow, error)
 	DeleteProjeto(ctx context.Context, id int32) error
 	UpdateProjetoDetalhes(ctx context.Context, arg repository.UpdateProjetoDetalhesParams) error
+
+	// chunks dos detalhes para RAG
+	DeleteProjetoDetalhesChunksByProjeto(ctx context.Context, projetoID int32) error
+	CreateProjetoDetalhesChunk(ctx context.Context, arg repository.CreateProjetoDetalhesChunkParams) (repository.ProjetosDetalhesChunk, error)
+	BulkCreateProjetoDetalhesChunks(ctx context.Context, arg []repository.BulkCreateProjetoDetalhesChunksParams) (int64, error)
+	UpdateProjetoDetalhesChunksPesquisa(ctx context.Context, projetoID int32) error
+	SearchProjetoDetalhesChunks(ctx context.Context, arg repository.SearchProjetoDetalhesChunksParams) ([]repository.SearchProjetoDetalhesChunksRow, error)
+	ListProjetoDetalhesChunksByProjeto(ctx context.Context, projetoID int32) ([]repository.ProjetosDetalhesChunk, error)
+	GetProjetoDetalhesChunkById(ctx context.Context, id int32) (repository.ProjetosDetalhesChunk, error)
 }
 
 type IUsuarioRepository interface {

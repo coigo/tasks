@@ -31,6 +31,8 @@ func NewProjetoHandler(cfg ProjetoHandlerConfig) *ProjetoHandler {
 	group.PUT("/:id", handler.Atualizar)
 	group.DELETE("/:id", handler.Remover)
 	group.PATCH("/:id/detalhes", handler.AtualizarDetalhes)
+	group.POST("/:id/detalhes", handler.ProjetoDetalheRAG)
+	
 
 	return handler
 }
@@ -45,6 +47,10 @@ type AtualizarProjetoRequest struct {
 
 type AtualizarDetalhesRequest struct {
 	Detalhes string `json:"detalhes"`
+}
+
+type ProjetoPromptRAGRequest struct {
+	Prompt string `json:"prompt"`
 }
 
 func (h *ProjetoHandler) Listar(ctx *gin.Context) {
@@ -139,4 +145,26 @@ func (h *ProjetoHandler) AtualizarDetalhes(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "detalhes atualizados"})
+}
+
+func (h *ProjetoHandler) ProjetoDetalheRAG(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "id invalido"})
+		return
+	}
+
+	var req ProjetoPromptRAGRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "dados invalidos"})
+		return
+	}
+
+	result, err := h.service.ProjetoDetalheRAG(ctx.Request.Context(), int32(id), &req.Prompt)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	
+	ctx.JSON(http.StatusOK, result)
 }
