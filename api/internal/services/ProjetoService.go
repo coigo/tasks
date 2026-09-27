@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"tasks/internal/llm"
 	"tasks/internal/repository"
 	"tasks/internal/repository/ports"
 	"tasks/internal/utils"
@@ -12,11 +13,14 @@ import (
 
 type ProjetoService struct {
 	projetoRepository ports.IProjetoRepository
+	llmProvider llm.OpenAiProvider
 }
 
-func NewProjetoService(repo ports.IProjetoRepository) *ProjetoService {
+func NewProjetoService(repo ports.IProjetoRepository, llm llm.OpenAiProvider) *ProjetoService {
 	return &ProjetoService{
 		projetoRepository: repo,
+		llmProvider: llm,
+		
 	}
 }
 
@@ -100,20 +104,20 @@ func (s *ProjetoService) AtualizarDetalhes(ctx context.Context, id int32, detalh
 	return nil
 }
 
-func (s *ProjetoService) ProjetoDetalheRAG(ctx context.Context, id int32, prompt *string) ([]string, error) {
+func (s *ProjetoService) ProjetoDetalheRAG(ctx context.Context, id int32, prompt string) (chan llm.ResponseChunk, error) {
 	// TODO: medida provisoria - o prompt e enviado diretamente para a query,
 	// que converte espacos em OR. Reavaliar quando houver parser de prompt.
-	fmt.Printf("prompt projeto %v -> %v\n", id, *prompt)
+	fmt.Printf("prompt projeto %v -> %v\n", id, prompt)
 	result, err := s.projetoRepository.SearchProjetoDetalhesChunks(ctx, repository.SearchProjetoDetalhesChunksParams{
-		Prompt:    *prompt,
+		Prompt:    prompt,
 		ProjetoID: id,
 		Limite:    3,
 	})
 	if err != nil {
-		return []string{}, fmt.Errorf("erro ao buscar chunks relevantes: %w", err)
+		return nil, fmt.Errorf("erro ao buscar chunks relevantes: %w", err)
 	}
 	if len(result) == 0 {
-		return []string{}, fmt.Errorf("nenhum conteudo relevante encontrado")
+		return nil, fmt.Errorf("nenhum conteudo relevante encontrado")
 	}
 
 	chunkTotal := min(3, len(result))
@@ -121,8 +125,15 @@ func (s *ProjetoService) ProjetoDetalheRAG(ctx context.Context, id int32, prompt
 	for i := range chunkTotal {
 		respostas = append(respostas, result[i].Content)
 	}
+
+	ch, err := s.llmProvider.Generate(ctx, llm.GenerateInput{
+		DocChunk: respostas,
+		Prompt:   prompt,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("nenhum conteudo relevante encontrado")
+	}
+	return ch, nil
 	
-	fmt.Println(result[0].Rank)
-	
-	return respostas, nil
 }

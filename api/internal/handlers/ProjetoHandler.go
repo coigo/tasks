@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"io"
 	"net/http"
 	"strconv"
 	"tasks/internal/middleware"
@@ -160,11 +161,23 @@ func (h *ProjetoHandler) ProjetoDetalheRAG(ctx *gin.Context) {
 		return
 	}
 
-	result, err := h.service.ProjetoDetalheRAG(ctx.Request.Context(), int32(id), &req.Prompt)
+	ch, err := h.service.ProjetoDetalheRAG(ctx.Request.Context(), int32(id), req.Prompt)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 	
-	ctx.JSON(http.StatusOK, result)
+	ctx.Stream(func (w io.Writer) bool {
+		event, ok := <- ch 
+		if !ok {
+			return false
+		}
+		if event.Err != nil {
+			ctx.SSEvent("error", event.Err.Error())
+			return false
+		}
+		ctx.SSEvent("data", event.Token)
+		return true
+		
+	})
 }

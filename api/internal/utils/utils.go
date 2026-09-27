@@ -28,6 +28,7 @@ func ClearHtml(html string) string {
 
 func GenerateTextChunks (text string) ([]string, error) {
 	splitter := textsplitter.NewRecursiveCharacter(
+		
 		textsplitter.WithChunkSize(500), 
 		textsplitter.WithChunkOverlap(100),
 	)
